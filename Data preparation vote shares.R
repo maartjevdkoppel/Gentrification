@@ -1,6 +1,7 @@
 # Set-up ---------------------------------------------------------------------------------------
 rm(list=ls())
 
+library(raster)
 library(foreign) 
 library(tidyverse)
 library(ggplot2) 
@@ -64,7 +65,7 @@ data2018 <- data2018 %>% rename(bc_naam = naam2018)
 
 #Make percentages for 2014 and 2018
 data2014[,4:32] <- data2014[,4:32]/data2014$totaal2014
-data2018 <-
+data2018[,7:34] <- data2018[,7:34]/data2018$geldige.stembiljetten2018
 
 # Merging data ---------------------------------------------------------------------------------
 
