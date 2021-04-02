@@ -64,8 +64,8 @@ data2014 <- data2014 %>% rename(bc_naam = naam_2014)
 data2018 <- data2018 %>% rename(bc_naam = naam_2018)
 
 #Make percentages for 2014 and 2018
-data2014[,4:32] <- data2014[,4:32]/data2014$totaal_2014
-data2018[,7:34] <- data2018[,7:34]/data2018$geldige.stembiljetten_2018
+data2014[,4:32] <- 100 * data2014[,4:32]/data2014$totaal_2014
+data2018[,7:34] <- 100 * data2018[,7:34]/data2018$geldige.stembiljetten_2018
 
 # Merging data ---------------------------------------------------------------------------------
 
@@ -74,6 +74,10 @@ data <- merge(data2006, data2010, by="bc_naam", all=TRUE)
 data <- merge(data,     data2014, by="bc_naam", all=TRUE)
 data <- merge(data,     data2018, by="bc_naam", all=TRUE)
 
-#Treat as numeric?
+#Reorder columns
+data <- data[,c(1,2,16,39,71,3:15,17:38,40:70,72:104)]
+
+#Subset to PvdA & multicultural parties only
+subdata <- data[,c(1:5,8,21,44,78,65,85,96)]
 
 
