@@ -80,4 +80,7 @@ data <- data[,c(1,2,16,39,71,3:15,17:38,40:70,72:104)]
 #Subset to PvdA & multicultural parties only
 subdata <- data[,c(1:5,8,21,44,78,65,85,96)]
 
+#Export data to CSV (full & subset)
+write.csv(data,   "/Users/Maartje/Desktop/LJA/data_allepartijen.csv", row.names = FALSE)
+write.csv(subdata,"/Users/Maartje/Desktop/LJA/data_subset.csv",       row.names = FALSE)
 
