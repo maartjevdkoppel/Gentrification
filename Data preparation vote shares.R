@@ -53,23 +53,26 @@ data2014 <- data2014[,c(1,5:36)]
 data2014 <- aggregate(data2014[,2:32], by=list(bc_code=data2014$bc_code, naam=data2014$naam), FUN=sum)
 
 #Add years to variable names
-names(data2006) <- paste0(names(data2006), "2006")
-names(data2010) <- paste0(names(data2010), "2010")
-names(data2014) <- paste0(names(data2014), "2014")
-names(data2018) <- paste0(names(data2018), "2018")
+names(data2006) <- paste0(names(data2006), "_2006")
+names(data2010) <- paste0(names(data2010), "_2010")
+names(data2014) <- paste0(names(data2014), "_2014")
+names(data2018) <- paste0(names(data2018), "_2018")
 
-data2006 <- data2006 %>% rename(bc_naam = naam.buurtcombinatie2006)
-data2010 <- data2010 %>% rename(bc_naam = naam.buurtcombinatie2010)
-data2014 <- data2014 %>% rename(bc_naam = naam2014)
-data2018 <- data2018 %>% rename(bc_naam = naam2018)
+data2006 <- data2006 %>% rename(bc_naam = naam.buurtcombinatie_2006)
+data2010 <- data2010 %>% rename(bc_naam = naam.buurtcombinatie_2010)
+data2014 <- data2014 %>% rename(bc_naam = naam_2014)
+data2018 <- data2018 %>% rename(bc_naam = naam_2018)
 
 #Make percentages for 2014 and 2018
-data2014[,4:32] <- data2014[,4:32]/data2014$totaal2014
-data2018[,7:34] <- data2018[,7:34]/data2018$geldige.stembiljetten2018
+data2014[,4:32] <- data2014[,4:32]/data2014$totaal_2014
+data2018[,7:34] <- data2018[,7:34]/data2018$geldige.stembiljetten_2018
 
 # Merging data ---------------------------------------------------------------------------------
 
 #Merge
+data <- merge(data2006, data2010, by="bc_naam", all=TRUE)
+data <- merge(data,     data2014, by="bc_naam", all=TRUE)
+data <- merge(data,     data2018, by="bc_naam", all=TRUE)
 
 #Treat as numeric?
 
