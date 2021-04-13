@@ -11,7 +11,7 @@ library(ggplot2)
 #Buurtcombinatie codes and names (2020 version)
 #Data can be retrieved from: https://data.amsterdam.nl/datasets/5L2CSm77FLZGYA/registratie-gebieden/
 #From the website, download the 'Gebieden Wijk' (CSV) file. 
-bc_namen <- read.csv("/Users/Maartje/Desktop/LJA/Data/Overzicht buurten Amsterdam.csv", header = TRUE)
+bc_namen <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Overzicht buurten Amsterdam.csv", header = TRUE)
 bc_namen <- bc_namen[,2:3]
 bc_namen <- bc_namen %>% rename(bc_code = code)
 
@@ -27,10 +27,10 @@ x$naam   <- paste0(x$lname, " + ", x$rname)
 bc_namen <- rbind(bc_namen[,1:2], x[,7:8])
 
 #2006-2018 election data
-data2006 <- read.csv("/Users/Maartje/Desktop/LJA/Data/2006_buurtcombinaties.csv", header = TRUE)
-data2010 <- read.csv("/Users/Maartje/Desktop/LJA/Data/2010_buurtcombinaties.csv", header = TRUE)
-data2014 <- read.csv("/Users/Maartje/Desktop/LJA/Data/2014_stembureaus.csv"     , header = TRUE)
-data2018 <- read.csv("/Users/Maartje/Desktop/LJA/Data/2018_buurtcombinaties.csv", header = TRUE)
+data2006 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2006_buurtcombinaties.csv", header = TRUE)
+data2010 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2010_buurtcombinaties.csv", header = TRUE)
+data2014 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2014_stembureaus.csv"     , header = TRUE)
+data2018 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2018_buurtcombinaties.csv", header = TRUE)
 
 # Preparing data files -------------------------------------------------------------------------
 
@@ -41,16 +41,19 @@ data2014 <- data2014[complete.cases(data2014[,4]),]
 data2018 <- data2018[complete.cases(data2018[,4]),]
 
 #Add BC full name variable to 2014 and 2018 data files (match on BC code)
-data2014 <- data2014 %>% rename(bc_code = bc)
+#2018 data is matched with 2020 file on names, 2014 is matched with BC names from 2010 data;
+#2010 codes and names change took place before 2010 elections (May-June)
+bc_namen_2010 <- data2010[,1:2]
+
 data2018 <- data2018 %>% rename(bc_code = wijk.std.gb)
 
-data2014 <- merge(data2014, bc_namen, by="bc_code")
-data2018 <- merge(data2018, bc_namen, by="bc_code") 
+data2014 <- merge(data2014, bc_namen_2010, by="bc")
+data2018 <- merge(data2018, bc_namen,      by="bc_code") 
 
 #Aggregate stembureaus into buurtcombinaties
 #S3.SD.summed <- aggregate(sendata$S3..Acknowledgement, by=list(speaker.debate.ID=sendata$speaker.debate.ID), FUN=sum)
 data2014 <- data2014[,c(1,5:36)]
-data2014 <- aggregate(data2014[,2:32], by=list(bc_code=data2014$bc_code, naam=data2014$naam), FUN=sum)
+data2014 <- aggregate(data2014[,2:32], by=list(bc=data2014$bc, naam.buurtcombinatie=data2014$naam.buurtcombinatie), FUN=sum)
 
 #Add years to variable names
 names(data2006) <- paste0(names(data2006), "_2006")
@@ -60,7 +63,7 @@ names(data2018) <- paste0(names(data2018), "_2018")
 
 data2006 <- data2006 %>% rename(bc_naam = naam.buurtcombinatie_2006)
 data2010 <- data2010 %>% rename(bc_naam = naam.buurtcombinatie_2010)
-data2014 <- data2014 %>% rename(bc_naam = naam_2014)
+data2014 <- data2014 %>% rename(bc_naam = naam.buurtcombinatie_2014)
 data2018 <- data2018 %>% rename(bc_naam = naam_2018)
 
 #Make percentages for 2014 and 2018
