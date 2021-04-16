@@ -40,14 +40,22 @@ data2010 <- data2010[complete.cases(data2010[,4]),]
 data2014 <- data2014[complete.cases(data2014[,4]),]
 data2018 <- data2018[complete.cases(data2018[,4]),]
 
+#Fix mistake in 2010 data
+data2010$bc <- if_else(data2010$bc == "E13+E12 ", "E13+E12", data2010$bc)
+data2014$bc <- if_else(data2014$bc == "N71",      "N60+N71", data2014$bc)
+
 #Add BC full name variable to 2014 and 2018 data files (match on BC code)
-#2018 data is matched with 2020 file on names, 2014 is matched with BC names from 2010 data;
-#2010 codes and names change took place before 2010 elections (May-June)
+#2018 data is matched with 2020 file on names, 2014 is matched with BC names from 2010 data
 bc_namen_2010 <- data2010[,1:2]
+K47 <- data.frame("Museumkwartier", "K47")
+K50 <- data.frame("Duivelseiland",  "K50")
+names(K47) <- c("naam.buurtcombinatie", "bc")
+names(K50) <- c("naam.buurtcombinatie", "bc")
+bc_namen_2014 <- rbind(K47, K50, bc_namen_2010)
 
 data2018 <- data2018 %>% rename(bc_code = wijk.std.gb)
 
-data2014 <- merge(data2014, bc_namen_2010, by="bc")
+data2014 <- merge(data2014, bc_namen_2014, by="bc")
 data2018 <- merge(data2018, bc_namen,      by="bc_code") 
 
 #Aggregate stembureaus into buurtcombinaties
