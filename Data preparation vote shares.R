@@ -4,9 +4,10 @@ rm(list=ls())
 library(raster)
 library(foreign) 
 library(tidyverse)
-library(ggplot2) 
+library(ggplot2)
+library(readxl)
 
-# Reading data ---------------------------------------------------------------------------------
+# VOTE SHARES - Reading data ---------------------------------------------------------------------------------
 
 #Buurtcombinatie codes and names (2020 version)
 #Data can be retrieved from: https://data.amsterdam.nl/datasets/5L2CSm77FLZGYA/registratie-gebieden/
@@ -32,7 +33,7 @@ data2010 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2010_buurtcombin
 data2014 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2014_stembureaus.csv"     , header = TRUE)
 data2018 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2018_buurtcombinaties.csv", header = TRUE)
 
-# Preparing data files -------------------------------------------------------------------------
+# VOTE SHARES - Preparing data files -------------------------------------------------------------------------
 
 #Remove empty rows
 data2006 <- data2006[complete.cases(data2006[,4]),]
@@ -78,7 +79,7 @@ data2018 <- data2018 %>% rename(bc_naam = naam_2018)
 data2014[,4:32] <- 100 * data2014[,4:32]/data2014$totaal_2014
 data2018[,7:34] <- 100 * data2018[,7:34]/data2018$geldige.stembiljetten_2018
 
-# Merging data ---------------------------------------------------------------------------------
+# VOTE SHARES - Merging data ---------------------------------------------------------------------------------
 
 #Merge
 data <- merge(data2006, data2010, by="bc_naam", all=TRUE)
@@ -94,4 +95,11 @@ subdata <- data[,c(1:5,8,21,44,78,65,85,96)]
 #Export data to CSV (full & subset)
 write.csv(data,   "/Users/Maartje/Desktop/LJA/data_allepartijen.csv", row.names = FALSE)
 write.csv(subdata,"/Users/Maartje/Desktop/LJA/data_subset.csv",       row.names = FALSE)
+
+# NEIGHBOURHOOD DATA - Reading data ---------------------------------------------------------------------------
+
+# Read 'Basisbestand Gebieden Amsterdam' (BBGA) for neighbourhood variables
+# Data can be retrieved from https://data.amsterdam.nl/datasets/G5JpqNbhweXZSw/basisbestand-gebieden-amsterdam-bbga/
+buurtdata <- read_excel("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken (versie 10-3-21).xlsx", sheet = 1, col_names = TRUE)
+
 
