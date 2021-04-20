@@ -102,4 +102,14 @@ write.csv(subdata,"/Users/Maartje/Desktop/LJA/data_subset.csv",       row.names 
 # Data can be retrieved from https://data.amsterdam.nl/datasets/G5JpqNbhweXZSw/basisbestand-gebieden-amsterdam-bbga/
 buurtdata <- read_excel("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken (versie 10-3-21).xlsx", sheet = 1, col_names = TRUE)
 
+# Subset to neighbourhood-level data only ('Wijken')
+unique(buurtdata$niveaunaam)
+buurtdata <- buurtdata %>% filter(buurtdata$niveaunaam == "Wijken")
+
+# Create different dataframes for relevant years
+buurtdata2005 <- buurtdata %>% filter(buurtdata$jaar == 2005)
+buurtdata2009 <- buurtdata %>% filter(buurtdata$jaar == 2009)
+buurtdata2013 <- buurtdata %>% filter(buurtdata$jaar == 2013)
+buurtdata2017 <- buurtdata %>% filter(buurtdata$jaar == 2017)
+
 
