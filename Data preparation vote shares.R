@@ -100,16 +100,43 @@ write.csv(subdata,"/Users/Maartje/Desktop/LJA/data_subset.csv",       row.names 
 
 # Read 'Basisbestand Gebieden Amsterdam' (BBGA) for neighbourhood variables
 # Data can be retrieved from https://data.amsterdam.nl/datasets/G5JpqNbhweXZSw/basisbestand-gebieden-amsterdam-bbga/
-buurtdata <- read_excel("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken (versie 10-3-21).xlsx", sheet = 1, col_names = TRUE)
+columnnames <- names(read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken (versie 10-3-21).xlsx", n_max = 0))
+columntypes <- ifelse(grepl("^[A-Z]", columnnames),"numeric", "guess")
+buurtdata <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken (versie 10-3-21).xlsx", sheet = 1, col_names = TRUE, col_types = columntypes)
 
 # Subset to neighbourhood-level data only ('Wijken')
 unique(buurtdata$niveaunaam)
 buurtdata <- buurtdata %>% filter(buurtdata$niveaunaam == "Wijken")
 
-# Create different dataframes for relevant years
+# Select relevant variables - drop all others
+independentvars <- c(columnnames[1:10], "BEVSUR", "BEVANTIL", 
+                     "BEVTURK", "BEVMAROK", "BEVOVNW", "BEVWEST", 
+                     "BEVAUTOCH", "BEV0_18", "BEV18_26", "BEV27_65", 
+                     "BEV66PLUS", "BEVOPLLAAG_P", "BEVOPLMID_P", 
+                     "BEVOPLHOOG_P", "BEV15_19", "BEV20_24", "BEV25_29",
+                     "BEV30_34", "BEV35_39", "BEV40_44", "BEV45_49", 
+                     "BEV50_54", "BEV55_59", "BEV60_64", "BEV65_69",
+                     "BEV70_74", "PREGWERKL")
+buurtdata <- buurtdata[independentvars]
+# NOTE: Unemployment information is not available for 2005 and 2009 (from 2010 onwards).
+
+# Create variable for percentage of population aged 15-74
+# This variable is needed to convert the education variables from relative to absolute numbers,
+# which is necessary when buurtcombinatie observations are combined (only those observations with N/A)
+buurtdata$BEV15_74 <- (buurtdata$BEV15_19 + buurtdata$BEV20_24 + buurtdata$BEV25_29 + buurtdata$BEV30_34 +
+                       buurtdata$BEV35_39 + buurtdata$BEV40_44 + buurtdata$BEV45_49 + buurtdata$BEV50_54 +
+                       buurtdata$BEV55_59 + buurtdata$BEV60_64 + buurtdata$BEV65_69 + buurtdata$BEV70_74)
+
+# Create different data frames for relevant years
 buurtdata2005 <- buurtdata %>% filter(buurtdata$jaar == 2005)
 buurtdata2009 <- buurtdata %>% filter(buurtdata$jaar == 2009)
 buurtdata2013 <- buurtdata %>% filter(buurtdata$jaar == 2013)
 buurtdata2017 <- buurtdata %>% filter(buurtdata$jaar == 2017)
+
+# Add years to variable names
+names(buurtdata2005) <- paste0(names(buurtdata2005), "_2005")
+names(buurtdata2009) <- paste0(names(buurtdata2009), "_2009")
+names(buurtdata2013) <- paste0(names(buurtdata2013), "_2013")
+names(buurtdata2017) <- paste0(names(buurtdata2017), "_2017")
 
 
