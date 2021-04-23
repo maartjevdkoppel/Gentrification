@@ -104,6 +104,8 @@ columnnames <- names(read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtk
 columntypes <- ifelse(grepl("^[A-Z]", columnnames),"numeric", "guess")
 buurtdata <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken (versie 10-3-21).xlsx", sheet = 1, col_names = TRUE, col_types = columntypes)
 
+# NEIGHBOURHOOD DATA - Preparing data ---------------------------------------------------------------------------
+
 # Subset to neighbourhood-level data only ('Wijken')
 unique(buurtdata$niveaunaam)
 buurtdata <- buurtdata %>% filter(buurtdata$niveaunaam == "Wijken")
@@ -138,5 +140,22 @@ names(buurtdata2005) <- paste0(names(buurtdata2005), "_2005")
 names(buurtdata2009) <- paste0(names(buurtdata2009), "_2009")
 names(buurtdata2013) <- paste0(names(buurtdata2013), "_2013")
 names(buurtdata2017) <- paste0(names(buurtdata2017), "_2017")
+
+# NEIGHBOURHOOD + VOTE SHARES - Merging data ---------------------------------------------------------------------------
+
+# Rename merge variables
+subdata       <- subdata       %>% rename(bc_code = bc_code_2018)
+buurtdata2005 <- buurtdata2005 %>% rename(bc_code = gebiedcode15_2005)
+buurtdata2009 <- buurtdata2009 %>% rename(bc_code = gebiedcode15_2009)
+buurtdata2013 <- buurtdata2013 %>% rename(bc_code = gebiedcode15_2013)
+buurtdata2017 <- buurtdata2017 %>% rename(bc_code = gebiedcode15_2017)
+
+# Merge vote share data + neighbourhood data 
+subdata_buurt <- merge(subdata,       buurtdata2005, by="bc_code", all=TRUE)
+subdata_buurt <- merge(subdata_buurt, buurtdata2009, by="bc_code", all=TRUE)
+subdata_buurt <- merge(subdata_buurt, buurtdata2013, by="bc_code", all=TRUE)
+subdata_buurt <- merge(subdata_buurt, buurtdata2017, by="bc_code", all=TRUE)
+
+
 
 
