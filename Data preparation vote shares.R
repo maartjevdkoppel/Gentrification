@@ -120,7 +120,8 @@ independentvars <- c(columnnames[1:10], "BEVSUR", "BEVANTIL",
                      "BEV50_54", "BEV55_59", "BEV60_64", "BEV65_69",
                      "BEV70_74", "PREGWERKL")
 buurtdata <- buurtdata[independentvars]
-# NOTE: Unemployment information is not available for 2005 and 2009 (from 2010 onwards).
+# NOTE: Unemployment information is unavailable for 2005 and 2009 (from 2010 onwards).
+# NOTE: Education information is unavailable for 2006.
 
 # Create variable for percentage of population aged 15-74
 # This variable is needed to convert the education variables from relative to absolute numbers,
@@ -128,6 +129,11 @@ buurtdata <- buurtdata[independentvars]
 buurtdata$BEV15_74 <- (buurtdata$BEV15_19 + buurtdata$BEV20_24 + buurtdata$BEV25_29 + buurtdata$BEV30_34 +
                        buurtdata$BEV35_39 + buurtdata$BEV40_44 + buurtdata$BEV45_49 + buurtdata$BEV50_54 +
                        buurtdata$BEV55_59 + buurtdata$BEV60_64 + buurtdata$BEV65_69 + buurtdata$BEV70_74)
+
+# Transform relative education variables into absolute variables
+buurtdata$BEVOPLLAAG <- (buurtdata$BEVOPLLAAG_P * buurtdata$BEV15_74) / 100
+buurtdata$BEVOPLMID  <- (buurtdata$BEVOPLMID_P  * buurtdata$BEV15_74) / 100
+buurtdata$BEVOPLHOOG <- (buurtdata$BEVOPLHOOG_P * buurtdata$BEV15_74) / 100
 
 # Create different data frames for relevant years
 buurtdata2005 <- buurtdata %>% filter(buurtdata$jaar == 2005)
@@ -156,6 +162,7 @@ subdata_buurt <- merge(subdata_buurt, buurtdata2009, by="bc_code", all=TRUE)
 subdata_buurt <- merge(subdata_buurt, buurtdata2013, by="bc_code", all=TRUE)
 subdata_buurt <- merge(subdata_buurt, buurtdata2017, by="bc_code", all=TRUE)
 
-
+# TO DO
+# For education variables: make percentages into absolute numbers
 
 
