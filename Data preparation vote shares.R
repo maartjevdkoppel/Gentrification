@@ -9,14 +9,14 @@ library(readxl)
 
 # VOTE SHARES - Reading data ---------------------------------------------------------------------------------
 
-#Buurtcombinatie codes and names (2020 version)
-#Data can be retrieved from: https://data.amsterdam.nl/datasets/5L2CSm77FLZGYA/registratie-gebieden/
-#From the website, download the 'Gebieden Wijk' (CSV) file. 
+# Buurtcombinatie codes and names (2020 version)
+# Data can be retrieved from: https://data.amsterdam.nl/datasets/5L2CSm77FLZGYA/registratie-gebieden/
+# From the website, download the 'Gebieden Wijk' (CSV) file. 
 bc_namen <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Overzicht buurten Amsterdam.csv", header = TRUE)
 bc_namen <- bc_namen[,2:3]
 bc_namen <- bc_namen %>% rename(bc_code = code)
 
-#Add all possible combinations of buurtcombinaties codes and names
+# Add all possible combinations of buurtcombinaties codes and names
 bc_namen$string <- paste0(bc_namen$bc_code, bc_namen$naam)
 x <- expand.grid(left=bc_namen$string, right=bc_namen$string)
 x$lcode  <- substring(x$left , 1, 3)
@@ -27,7 +27,7 @@ x$bc_code<- paste0(x$lcode,  "+" , x$rcode)
 x$naam   <- paste0(x$lname, " + ", x$rname)
 bc_namen <- rbind(bc_namen[,1:2], x[,7:8])
 
-#2006-2018 election data
+# 2006-2018 election data
 data2006 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2006_buurtcombinaties.csv", header = TRUE)
 data2010 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2010_buurtcombinaties.csv", header = TRUE)
 data2014 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2014_stembureaus.csv"     , header = TRUE)
@@ -35,18 +35,18 @@ data2018 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2018_buurtcombin
 
 # VOTE SHARES - Preparing data files -------------------------------------------------------------------------
 
-#Remove empty rows
+# Remove empty rows
 data2006 <- data2006[complete.cases(data2006[,4]),]
 data2010 <- data2010[complete.cases(data2010[,4]),]
 data2014 <- data2014[complete.cases(data2014[,4]),]
 data2018 <- data2018[complete.cases(data2018[,4]),]
 
-#Fix mistake in 2010 data
+# Fix mistake in 2010 data
 data2010$bc <- if_else(data2010$bc == "E13+E12 ", "E13+E12", data2010$bc)
 data2014$bc <- if_else(data2014$bc == "N71",      "N60+N71", data2014$bc)
 
-#Add BC full name variable to 2014 and 2018 data files (match on BC code)
-#2018 data is matched with 2020 file on names, 2014 is matched with BC names from 2010 data
+# Add BC full name variable to 2014 and 2018 data files (match on BC code)
+# 2018 data is matched with 2020 file on names, 2014 is matched with BC names from 2010 data
 bc_namen_2010 <- data2010[,1:2]
 K47 <- data.frame("Museumkwartier", "K47")
 K50 <- data.frame("Duivelseiland",  "K50")
@@ -59,12 +59,12 @@ data2018 <- data2018 %>% rename(bc_code = wijk.std.gb)
 data2014 <- merge(data2014, bc_namen_2014, by="bc")
 data2018 <- merge(data2018, bc_namen,      by="bc_code") 
 
-#Aggregate stembureaus into buurtcombinaties
-#S3.SD.summed <- aggregate(sendata$S3..Acknowledgement, by=list(speaker.debate.ID=sendata$speaker.debate.ID), FUN=sum)
+# Aggregate stembureaus into buurtcombinaties
+# S3.SD.summed <- aggregate(sendata$S3..Acknowledgement, by=list(speaker.debate.ID=sendata$speaker.debate.ID), FUN=sum)
 data2014 <- data2014[,c(1,5:36)]
 data2014 <- aggregate(data2014[,2:32], by=list(bc=data2014$bc, naam.buurtcombinatie=data2014$naam.buurtcombinatie), FUN=sum)
 
-#Add years to variable names
+# Add years to variable names
 names(data2006) <- paste0(names(data2006), "_2006")
 names(data2010) <- paste0(names(data2010), "_2010")
 names(data2014) <- paste0(names(data2014), "_2014")
@@ -75,24 +75,24 @@ data2010 <- data2010 %>% rename(bc_naam = naam.buurtcombinatie_2010)
 data2014 <- data2014 %>% rename(bc_naam = naam.buurtcombinatie_2014)
 data2018 <- data2018 %>% rename(bc_naam = naam_2018)
 
-#Make percentages for 2014 and 2018
+# Make percentages for 2014 and 2018
 data2014[,4:32] <- 100 * data2014[,4:32]/data2014$totaal_2014
 data2018[,7:34] <- 100 * data2018[,7:34]/data2018$geldige.stembiljetten_2018
 
 # VOTE SHARES - Merging data ---------------------------------------------------------------------------------
 
-#Merge
+# Merge
 data <- merge(data2006, data2010, by="bc_naam", all=TRUE)
 data <- merge(data,     data2014, by="bc_naam", all=TRUE)
 data <- merge(data,     data2018, by="bc_naam", all=TRUE)
 
-#Reorder columns
+# Reorder columns
 data <- data[,c(1,2,16,39,71,3:15,17:38,40:70,72:104)]
 
-#Subset to PvdA & multicultural parties only
+# Subset to PvdA & multicultural parties only
 subdata <- data[,c(1:5,8,21,44,78,65,85,96)]
 
-#Export data to CSV (full & subset)
+# Export data to CSV (full & subset)
 write.csv(data,   "/Users/Maartje/Desktop/LJA/data_allepartijen.csv", row.names = FALSE)
 write.csv(subdata,"/Users/Maartje/Desktop/LJA/data_subset.csv",       row.names = FALSE)
 
@@ -111,7 +111,7 @@ unique(buurtdata$niveaunaam)
 buurtdata <- buurtdata %>% filter(buurtdata$niveaunaam == "Wijken")
 
 # Select relevant variables - drop all others
-independentvars <- c(columnnames[1:10], "BEVSUR", "BEVANTIL", 
+independentvars <- c("gebiedcode15", "gebiednaam", "jaar", "BEVTOTAAL", "BEVSUR", "BEVANTIL", 
                      "BEVTURK", "BEVMAROK", "BEVOVNW", "BEVWEST", 
                      "BEVAUTOCH", "BEV0_18", "BEV18_26", "BEV27_65", 
                      "BEV66PLUS", "BEVOPLLAAG_P", "BEVOPLMID_P", 
@@ -162,7 +162,108 @@ subdata_buurt <- merge(subdata_buurt, buurtdata2009, by="bc_code", all=TRUE)
 subdata_buurt <- merge(subdata_buurt, buurtdata2013, by="bc_code", all=TRUE)
 subdata_buurt <- merge(subdata_buurt, buurtdata2017, by="bc_code", all=TRUE)
 
+# NEIGHBOURHOOD + VOTE SHARES - Merging neighbourhoods ------------------------------------------------------------------
+
+# Back-up data 
+subdata_buurt_backup <- subdata_buurt
+subdata_buurt <- subdata_buurt_backup
+
+# Drop redundant variables: jaar, gebiednaam & 2006-2014 BC codes
+subdata_buurt = subset(subdata_buurt, select = -c(jaar_2005, gebiednaam_2005, jaar_2009, gebiednaam_2009, jaar_2013, 
+                                                  gebiednaam_2013, jaar_2017, gebiednaam_2017, bc_2006, bc_2010, bc_2014))
+
+# Replace missings with empty string for bc_code and bc_naam
+subdata_buurt$bc_code <- ifelse(is.na(subdata_buurt$bc_code), "", subdata_buurt$bc_code)
+subdata_buurt$bc_naam <- ifelse(is.na(subdata_buurt$bc_naam), "", subdata_buurt$bc_naam)
+
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Rename all neighbourhoods to be merged
+# Specify renaming function
+rename.bc <- function(x, condition, code, name){
+  x$bc_code <- ifelse(condition, code, x$bc_code) # change BC code
+  x$bc_naam <- ifelse(condition, name, x$bc_naam) # change BC name
+  x
+}
+
+# De Krommert: Chassébuurt + Geuzenbuurt
+condition     <- subdata_buurt$bc_naam == "De Krommert" | subdata_buurt$bc_naam == "Chassébuurt" | subdata_buurt$bc_naam == "Geuzenbuurt"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "E40+E75", "De Krommert: Chassébuurt + Geuzenbuurt")
+
+# Diamantbuurt/Zuid Pijp
+condition     <- subdata_buurt$bc_naam == "Diamantbuurt" | subdata_buurt$bc_naam == "Zuid Pijp"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "K26", "Diamantbuurt/Zuid Pijp")
+
+# Museumkwartier + Duivelseiland 
+condition     <- subdata_buurt$bc_naam == "Duivelseiland" | subdata_buurt$bc_naam == "Museumkwartier" | subdata_buurt$bc_naam == "Museumkwartier + Duivelseiland"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "K47+K50", "Museumkwartier + Duivelseiland")
+
+# Buikslotermeer + Elzenhagen
+condition     <- subdata_buurt$bc_naam == "Elzenhagen" | subdata_buurt$bc_naam == "Buikslotermeer"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "N69+N74", "Buikslotermeer + Elzenhagen")
+
+# Frankendael + De Omval/Overamstel
+condition     <- subdata_buurt$bc_naam == "Frankendael" | subdata_buurt$bc_naam == "Frankendael + De Omval" | subdata_buurt$bc_naam == "De Omval" | subdata_buurt$bc_naam == "Omval/Overamstel"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "M55+M58", "Frankendael + De Omval/Overamstel")
+
+# IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost
+condition     <- subdata_buurt$bc_naam == "IJburg West" | subdata_buurt$bc_naam == "IJburg West + Zeeburgereiland/Nieuwe Diep" | subdata_buurt$bc_naam == "Indische Buurt Oost" | subdata_buurt$bc_naam == "Indische Buurt Oost + Zeeburgereiland/Nieuwe Diep" 
+subdata_buurt <- rename.bc(subdata_buurt, condition, "M32+M34+M35", "IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost")
+
+# IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost
+condition     <- subdata_buurt$bc_naam == "IJplein/Vogelbuurt + Nieuwendammerham" | subdata_buurt$bc_naam == "IJplein/Vogelbuurt + Noordelijke IJ-oevers Oost" | subdata_buurt$bc_code == "N61" | subdata_buurt$bc_code == "N72"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "N61+N72", "IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost")
+
+# Middelveldsche Akerpolder/Sloten
+condition     <- subdata_buurt$bc_naam == "Middelveldsche Akerpolder" | subdata_buurt$bc_naam == "Middelveldsche Akerpolder/Sloten"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "F84", "Middelveldsche Akerpolder/Sloten")
+
+# Nieuwendam-Noord/Waterlandpleinbuurt
+condition     <- subdata_buurt$bc_naam == "Nieuwendam-Noord" | subdata_buurt$bc_naam == "Waterlandpleinbuurt"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "N68", "Nieuwendam-Noord/Waterlandpleinbuurt")
+
+# Prinses Irenebuurt e.o./Station Zuid/WTC e.o.
+condition     <- subdata_buurt$bc_naam == "Prinses Irenebuurt e.o." | subdata_buurt$bc_naam == "Station Zuid/WTC e.o."
+subdata_buurt <- rename.bc(subdata_buurt, condition, "K59", "Prinses Irenebuurt e.o./Station Zuid/WTC e.o.")
+
+# Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk
+condition     <- subdata_buurt$bc_naam == "Slotermeer-Noordoost" | subdata_buurt$bc_naam == "Slotermeer-Noordoost + Spieringhorn" | subdata_buurt$bc_naam == "Westelijk Havengebied + Bedrijventerrein Sloterdijk" | subdata_buurt$bc_code == "B10" | subdata_buurt$bc_code == "F11"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "F76+F75+B10+F11", "Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk")
+
+# Slotervaart: Slotervaart Noord + Slotervaart Zuid
+condition     <- subdata_buurt$bc_naam == "Slotervaart" | subdata_buurt$bc_naam == "Slotervaart Noord" | subdata_buurt$bc_naam == "Slotervaart Zuid"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "F85+F89", "Slotervaart: Slotervaart Noord + Slotervaart Zuid")
+
+# Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West
+condition     <- subdata_buurt$bc_naam == "Volewijck + Buiksloterham" | subdata_buurt$bc_naam == "Volewijck + Noordelijke IJ-oevers West" | subdata_buurt$bc_code == "N60" | subdata_buurt$bc_code == "N71"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "N60+N71", "Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West")
+
+# Following neighbourhoods were consistent in vote share data, but failed to merge with the neighbourhood characteristics data (e.g. not in neighbourhood data as a combined code)
+# Spaarndammer- en Zeeheldenbuurt + Houthavens
+condition     <- subdata_buurt$bc_code == "E12" | subdata_buurt$bc_code == "E13" | subdata_buurt$bc_code == "E13+E12"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "E13+12", "Spaarndammer- en Zeeheldenbuurt + Houthavens")
+    
+# Landlust + Sloterdijk
+condition     <- subdata_buurt$bc_code == "E36" | subdata_buurt$bc_code == "E37" | subdata_buurt$bc_code == "E37+E36"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "E37+E36", "Landlust + Sloterdijk") 
+
+# Tuindorp Buiksloot + Nieuwendammerdijk/Buiksloterdijk
+condition     <- subdata_buurt$bc_code == "N63+N64" | subdata_buurt$bc_code == "N63" | subdata_buurt$bc_code == "N64"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "N63+N64", "Tuindorp Buiksloot + Nieuwendammerdijk/Buiksloterdijk")
+
+# Holendrecht/Reigersbos + Amstel III/Bullewijk
+condition     <- subdata_buurt$bc_code == "T96+T92" | subdata_buurt$bc_code == "T96" | subdata_buurt$bc_code == "T92"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "T96+T92", "Holendrecht/Reigersbos + Amstel III/Bullewijk")
+
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Drop neighbourhoods 'M50' (not present in voting data) and 'Z99' (false BC code)
+subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "Z99",]
+
+# Aggregate all neighbourhoods to be merged 
+subdata_buurt[is.na(subdata_buurt)] <- 0
+subdata_buurt <- aggregate(subdata_buurt[,3:137], by=list(bc_code=subdata_buurt$bc_code, bc_naam=subdata_buurt$bc_naam), FUN=sum)
+
 # TO DO
-# For education variables: make percentages into absolute numbers
-
-
+# Get vote share data in absolute numbers
+# Correct all relative variables to absolute 
