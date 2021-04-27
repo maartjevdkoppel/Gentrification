@@ -6,6 +6,8 @@ library(foreign)
 library(tidyverse)
 library(ggplot2)
 library(readxl)
+library(dplyr)
+library(stats)
 
 # VOTE SHARES - Reading data ---------------------------------------------------------------------------------
 
@@ -260,9 +262,33 @@ subdata_buurt <- rename.bc(subdata_buurt, condition, "T96+T92", "Holendrecht/Rei
 # Drop neighbourhoods 'M50' (not present in voting data) and 'Z99' (false BC code)
 subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "Z99",]
 
+# New back-up of data
+subdata_buurt_backup <- subdata_buurt
+subdata_buurt <- subdata_buurt_backup
+
 # Aggregate all neighbourhoods to be merged 
+# subdata_buurt[is.na(subdata_buurt)] <- 0
+#subdata_buurt <- stats::aggregate(subdata_buurt[,3:137], by=list(subdata_buurt$bc_code, subdata_buurt$bc_naam), FUN=sum, na.rm=TRUE, na.action=na.pass)
+#grouped <- subdata_buurt %>% group_by(bc_code, bc_naam, .drop = TRUE)
+#x <- grouped %>% summarize(hello = sum(PVDA_2006))
+
+
+# 0 naar 999999
+iszero <- function(x) {x== 0}
+subdata_buurt[iszero(subdata_buurt)] <- 999999
+
+# missing naar 0
 subdata_buurt[is.na(subdata_buurt)] <- 0
-subdata_buurt <- aggregate(subdata_buurt[,3:137], by=list(bc_code=subdata_buurt$bc_code, bc_naam=subdata_buurt$bc_naam), FUN=sum)
+
+# aggregate sum
+subdata_buurt <- aggregate(subdata_buurt[,3:137], by=list(subdata_buurt$bc_code, subdata_buurt$bc_naam), FUN=sum)
+
+# 0 naar missing
+subdata_buurt[iszero(subdata_buurt)] <- NA
+
+# alles modulo 999999
+subdata_buurt[,3:137] <- subdata_buurt[,3:137] %% 999999
+
 
 # TO DO
 # Get vote share data in absolute numbers
