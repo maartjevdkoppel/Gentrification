@@ -313,6 +313,19 @@ subdata_buurt$MPP_2014  <- (subdata_buurt$MPP_2014  / subdata_buurt$totaal_2014)
 subdata_buurt$DENK_2018 <- (subdata_buurt$DENK_2018 / subdata_buurt$totaal_2018) * 100
 subdata_buurt$BIJ1_2018 <- (subdata_buurt$BIJ1_2018 / subdata_buurt$totaal_2018) * 100
 
+# Rename PvdA to PVDA for consistency
+names(subdata_buurt) <- str_replace(names(subdata_buurt), "PvdA", "PVDA")
+
+# Variables for changes in party support
+subdata_buurt$PVDAdelta2006_2010 <- subdata_buurt$PVDA_2010 - subdata_buurt$PVDA_2006
+subdata_buurt$PVDAdelta2006_2014 <- subdata_buurt$PVDA_2014 - subdata_buurt$PVDA_2006
+subdata_buurt$PVDAdelta2006_2018 <- subdata_buurt$PVDA_2018 - subdata_buurt$PVDA_2006
+
+subdata_buurt$PVDAdelta2010_2014 <- subdata_buurt$PVDA_2014 - subdata_buurt$PVDA_2010
+subdata_buurt$PVDAdelta2010_2018 <- subdata_buurt$PVDA_2018 - subdata_buurt$PVDA_2010
+
+subdata_buurt$PVDAdelta2014_2018 <- subdata_buurt$PVDA_2018 - subdata_buurt$PVDA_2014
+
 # COMPLETE DATASET - Reshaping ---------------------------------------------------------------------------
 
 # Rename 2005, 2009, 2013, 2017 to +1
@@ -321,12 +334,9 @@ names(subdata_buurt) <- str_replace(names(subdata_buurt), "2009", "2010")
 names(subdata_buurt) <- str_replace(names(subdata_buurt), "2013", "2014")
 names(subdata_buurt) <- str_replace(names(subdata_buurt), "2017", "2018")
 
-# Rename PvdA to PVDA for consistency
-names(subdata_buurt) <- str_replace(names(subdata_buurt), "PvdA", "PVDA")
-
 # Reshape all year-dependent variables to long structure 
 subdata_buurt_longest <- subdata_buurt %>% pivot_longer(
-  cols = PVDA_2006:BEVOPLHOOG_2018,
+  cols = PVDA_2006:PVDAdelta2014_2018, # Change if adding more variables to dataset!
   names_to = c("kolomnaam", "jaar"), 
   names_pattern = "(.*)_(.*)",
   values_to = "waarde"
@@ -341,7 +351,7 @@ subdata_buurt_long <- subdata_buurt_longest %>% pivot_wider(
 # Add variable indicating measurement year for neighbourhood variables (election year - 1)
 subdata_buurt_long$jaar           <- as.numeric(subdata_buurt_long$jaar)
 subdata_buurt_long$jaar_buurtvars <- subdata_buurt_long$jaar - 1
-subdata_buurt_long                <- subdata_buurt_long[,c(1:3,38,4:37)]
+subdata_buurt_long                <- subdata_buurt_long[,c(1:3,41,4:40)] # Change if adding more variables to dataset!
 
 # Export long data
 write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.csv", row.names = FALSE)
@@ -353,3 +363,4 @@ write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.cs
 # Collect gentrification data
 # Collect missing education + unemployment data
 # V Transform into long data
+# V Create change in party support variables (absolute change)
