@@ -209,7 +209,7 @@ condition     <- subdata_buurt$bc_naam == "Frankendael" | subdata_buurt$bc_naam 
 subdata_buurt <- rename.bc(subdata_buurt, condition, "M55+M58", "Frankendael + De Omval/Overamstel")
 
 # IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost
-condition     <- subdata_buurt$bc_naam == "IJburg West" | subdata_buurt$bc_naam == "IJburg West + Zeeburgereiland/Nieuwe Diep" | subdata_buurt$bc_naam == "Indische Buurt Oost" | subdata_buurt$bc_naam == "Indische Buurt Oost + Zeeburgereiland/Nieuwe Diep" 
+condition     <- subdata_buurt$bc_naam == "IJburg West" | subdata_buurt$bc_naam == "IJburg West + Zeeburgereiland/Nieuwe Diep" | subdata_buurt$bc_naam == "Indische Buurt Oost" | subdata_buurt$bc_naam == "Indische Buurt Oost + Zeeburgereiland/Nieuwe Diep" | subdata_buurt$bc_naam == "Zeeburgereiland/Nieuwe Diep"
 subdata_buurt <- rename.bc(subdata_buurt, condition, "M32+M34+M35", "IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost")
 
 # IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost
@@ -267,29 +267,18 @@ subdata_buurt_backup <- subdata_buurt
 subdata_buurt <- subdata_buurt_backup
 
 # Aggregate all neighbourhoods to be merged 
-# subdata_buurt[is.na(subdata_buurt)] <- 0
-#subdata_buurt <- stats::aggregate(subdata_buurt[,3:137], by=list(subdata_buurt$bc_code, subdata_buurt$bc_naam), FUN=sum, na.rm=TRUE, na.action=na.pass)
-#grouped <- subdata_buurt %>% group_by(bc_code, bc_naam, .drop = TRUE)
-#x <- grouped %>% summarize(hello = sum(PVDA_2006))
-
-
-# 0 naar 999999
+# Aggregate function cannot deal with NA -- use 999999 as placeholder for 0 to retain NAs in merged data
 iszero <- function(x) {x== 0}
-subdata_buurt[iszero(subdata_buurt)] <- 999999
-
-# missing naar 0
-subdata_buurt[is.na(subdata_buurt)] <- 0
-
-# aggregate sum
-subdata_buurt <- aggregate(subdata_buurt[,3:137], by=list(subdata_buurt$bc_code, subdata_buurt$bc_naam), FUN=sum)
-
-# 0 naar missing
-subdata_buurt[iszero(subdata_buurt)] <- NA
-
-# alles modulo 999999
-subdata_buurt[,3:137] <- subdata_buurt[,3:137] %% 999999
+placeholder <- 999999 # make 999999 constant
+subdata_buurt[iszero(subdata_buurt)] <- placeholder # set 0 to 999999
+subdata_buurt[is.na(subdata_buurt)] <- 0 # set missing to 0
+subdata_buurt <- aggregate(subdata_buurt[,3:137], by=list(subdata_buurt$bc_code, subdata_buurt$bc_naam), FUN=sum) # aggregate data with sum
+subdata_buurt[iszero(subdata_buurt)] <- NA # set 0 to missing
+subdata_buurt[,3:137] <- subdata_buurt[,3:137] %% placeholder # all modulo 999999
 
 
 # TO DO
 # Get vote share data in absolute numbers
-# Correct all relative variables to absolute 
+# Correct all relative variables to absolute
+# Collect gentrification data
+# Collect missing education + unemployment data
