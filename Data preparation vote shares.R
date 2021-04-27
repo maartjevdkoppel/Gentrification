@@ -129,7 +129,7 @@ independentvars <- c("gebiedcode15", "gebiednaam", "jaar", "BEVTOTAAL", "BEVSUR"
                      "BEVOPLHOOG_P", "BEV15_19", "BEV20_24", "BEV25_29",
                      "BEV30_34", "BEV35_39", "BEV40_44", "BEV45_49", 
                      "BEV50_54", "BEV55_59", "BEV60_64", "BEV65_69",
-                     "BEV70_74", "PREGWERKL")
+                     "BEV70_74", "PREGWERKL", "WHUURTSLG_P", "WVOORRBAG")
 buurtdata <- buurtdata[independentvars]
 # NOTE: Unemployment information is unavailable for 2005 and 2009 (from 2010 onwards).
 # NOTE: Education information is unavailable for 2006.
@@ -146,8 +146,11 @@ buurtdata$BEVOPLLAAG <- (buurtdata$BEVOPLLAAG_P * buurtdata$BEV15_74) / 100
 buurtdata$BEVOPLMID  <- (buurtdata$BEVOPLMID_P  * buurtdata$BEV15_74) / 100
 buurtdata$BEVOPLHOOG <- (buurtdata$BEVOPLHOOG_P * buurtdata$BEV15_74) / 100
 
-# Drop relative education variables 
-buurtdata = subset(buurtdata, select = -c(BEVOPLLAAG_P, BEVOPLMID_P, BEVOPLHOOG_P))
+# Transform relative social housing variables into absolute variables
+buurtdata$WHUURTSLG <- (buurtdata$WHUURTSLG_P * buurtdata$WVOORRBAG) / 100 
+
+# Drop relative variables 
+buurtdata = subset(buurtdata, select = -c(BEVOPLLAAG_P, BEVOPLMID_P, BEVOPLHOOG_P, WHUURTSLG_P))
 
 # Rename _ with -, because we later want there to only be one underscore
 names(buurtdata) <- str_replace(names(buurtdata), "_", "-")
@@ -287,17 +290,17 @@ iszero <- function(x) {x== 0}
 placeholder <- 999999 # make 999999 constant
 subdata_buurt[iszero(subdata_buurt)] <- placeholder # set 0 to 999999
 subdata_buurt[is.na(subdata_buurt)] <- 0 # set missing to 0
-subdata_buurt <- aggregate(subdata_buurt[,3:129], by=list(bc_code=subdata_buurt$bc_code, bc_naam=subdata_buurt$bc_naam), FUN=sum) # aggregate data with sum
+subdata_buurt <- aggregate(subdata_buurt[,3:137], by=list(bc_code=subdata_buurt$bc_code, bc_naam=subdata_buurt$bc_naam), FUN=sum) # aggregate data with sum
 subdata_buurt[iszero(subdata_buurt)] <- NA # set 0 to missing
-subdata_buurt[,3:129] <- subdata_buurt[,3:129] %% placeholder # all modulo 999999
+subdata_buurt[,3:137] <- subdata_buurt[,3:137] %% placeholder # all modulo 999999
 
 # COMPLETE DATASET - Percentage variables ----------------------------------------------------------------
 
 # Neighbourhood characteristics 
-buurt_vars_2005 <- c(15:42)
-buurt_vars_2009 <- c(44:71)
-buurt_vars_2013 <- c(73:100)
-buurt_vars_2017 <- c(102:129)
+buurt_vars_2005 <- c(15:44)
+buurt_vars_2009 <- c(46:75)
+buurt_vars_2013 <- c(77:106)
+buurt_vars_2017 <- c(108:137)
 
 subdata_buurt[,buurt_vars_2005] <- (subdata_buurt[,buurt_vars_2005] / subdata_buurt$BEVTOTAAL_2005) * 100
 subdata_buurt[,buurt_vars_2009] <- (subdata_buurt[,buurt_vars_2009] / subdata_buurt$BEVTOTAAL_2009) * 100
@@ -351,7 +354,7 @@ subdata_buurt_long <- subdata_buurt_longest %>% pivot_wider(
 # Add variable indicating measurement year for neighbourhood variables (election year - 1)
 subdata_buurt_long$jaar           <- as.numeric(subdata_buurt_long$jaar)
 subdata_buurt_long$jaar_buurtvars <- subdata_buurt_long$jaar - 1
-subdata_buurt_long                <- subdata_buurt_long[,c(1:3,41,4:40)] # Change if adding more variables to dataset!
+subdata_buurt_long                <- subdata_buurt_long[,c(1:3,43,4:8,40:42,9:39)] # Change if adding more variables to dataset!
 
 # Export long data
 write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.csv", row.names = FALSE)
@@ -361,6 +364,6 @@ write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.cs
 # V Correct all relative variables to absolute: only education variable?
 # V Make into percentage variables again
 # Collect gentrification data
-# Collect missing education + unemployment data
+# Collect missing education, unemployment & social housing data
 # V Transform into long data
 # V Create change in party support variables (absolute change)
