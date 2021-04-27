@@ -35,6 +35,11 @@ data2010 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2010_buurtcombin
 data2014 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2014_stembureaus.csv"     , header = TRUE)
 data2018 <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2018_buurtcombinaties.csv", header = TRUE)
 
+data2006perc <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2006_buurtcombinaties_procenten.csv", header = TRUE)
+data2010perc <- read.csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/2010_buurtcombinaties_procenten.csv", header = TRUE)
+data2006perc <- data2006perc[complete.cases(data2006perc[,4]),]
+data2010perc <- data2010perc[complete.cases(data2010perc[,4]),]
+
 # VOTE SHARES - Preparing data files -------------------------------------------------------------------------
 
 # Remove empty rows
@@ -43,9 +48,10 @@ data2010 <- data2010[complete.cases(data2010[,4]),]
 data2014 <- data2014[complete.cases(data2014[,4]),]
 data2018 <- data2018[complete.cases(data2018[,4]),]
 
-# Fix mistake in 2010 data
-data2010$bc <- if_else(data2010$bc == "E13+E12 ", "E13+E12", data2010$bc)
-data2014$bc <- if_else(data2014$bc == "N71",      "N60+N71", data2014$bc)
+# Fix mistakes in 2010 and 2014 data
+data2010$bc                   <- if_else(data2010$bc == "E13+E12 ", "E13+E12", data2010$bc)
+data2014$bc                   <- if_else(data2014$bc == "N71", "N60+N71", data2014$bc)
+data2010$naam.buurtcombinatie <- if_else(data2010$naam.buurtcombinatie == "Middelveldsche Akerpolder/ Sloten", "Middelveldsche Akerpolder/Sloten", data2010$naam.buurtcombinatie)
 
 # Add BC full name variable to 2014 and 2018 data files (match on BC code)
 # 2018 data is matched with 2020 file on names, 2014 is matched with BC names from 2010 data
@@ -72,14 +78,15 @@ names(data2010) <- paste0(names(data2010), "_2010")
 names(data2014) <- paste0(names(data2014), "_2014")
 names(data2018) <- paste0(names(data2018), "_2018")
 
-data2006 <- data2006 %>% rename(bc_naam = naam.buurtcombinatie_2006)
-data2010 <- data2010 %>% rename(bc_naam = naam.buurtcombinatie_2010)
-data2014 <- data2014 %>% rename(bc_naam = naam.buurtcombinatie_2014)
-data2018 <- data2018 %>% rename(bc_naam = naam_2018)
+data2006 <- data2006 %>% rename(bc_naam     = naam.buurtcombinatie_2006)
+data2010 <- data2010 %>% rename(bc_naam     = naam.buurtcombinatie_2010)
+data2014 <- data2014 %>% rename(bc_naam     = naam.buurtcombinatie_2014)
+data2018 <- data2018 %>% rename(bc_naam     = naam_2018)
+data2018 <- data2018 %>% rename(totaal_2018 = geldige.stembiljetten_2018)
 
-# Make percentages for 2014 and 2018
-data2014[,4:32] <- 100 * data2014[,4:32]/data2014$totaal_2014
-data2018[,7:34] <- 100 * data2018[,7:34]/data2018$geldige.stembiljetten_2018
+# Make percentages for 2014 and 2018 - NO LONGER NEEDED
+#data2014[,4:32] <- 100 * data2014[,4:32]/data2014$totaal_2014
+#data2018[,7:34] <- 100 * data2018[,7:34]/data2018$geldige.stembiljetten_2018
 
 # VOTE SHARES - Merging data ---------------------------------------------------------------------------------
 
@@ -89,10 +96,11 @@ data <- merge(data,     data2014, by="bc_naam", all=TRUE)
 data <- merge(data,     data2018, by="bc_naam", all=TRUE)
 
 # Reorder columns
-data <- data[,c(1,2,16,39,71,3:15,17:38,40:70,72:104)]
+data <- data[,c(1,2,17,40,72,3:16,18:39,41:71,73:105)]
 
 # Subset to PvdA & multicultural parties only
-subdata <- data[,c(1:5,8,21,44,78,65,85,96)]
+subdata <- data[,c(1:5,8,9,22,23,45,72,74,79,66,86,97)]
+subdata <- subdata[,c(1:5,7,9,10,13:16,6,8,11,12)] # reorder columns in subdata
 
 # Export data to CSV (full & subset)
 write.csv(data,   "/Users/Maartje/Desktop/LJA/data_allepartijen.csv", row.names = FALSE)
@@ -136,6 +144,9 @@ buurtdata$BEV15_74 <- (buurtdata$BEV15_19 + buurtdata$BEV20_24 + buurtdata$BEV25
 buurtdata$BEVOPLLAAG <- (buurtdata$BEVOPLLAAG_P * buurtdata$BEV15_74) / 100
 buurtdata$BEVOPLMID  <- (buurtdata$BEVOPLMID_P  * buurtdata$BEV15_74) / 100
 buurtdata$BEVOPLHOOG <- (buurtdata$BEVOPLHOOG_P * buurtdata$BEV15_74) / 100
+
+# Drop relative education variables 
+buurtdata = subset(buurtdata, select = -c(BEVOPLLAAG_P, BEVOPLMID_P, BEVOPLHOOG_P))
 
 # Create different data frames for relevant years
 buurtdata2005 <- buurtdata %>% filter(buurtdata$jaar == 2005)
@@ -272,13 +283,15 @@ iszero <- function(x) {x== 0}
 placeholder <- 999999 # make 999999 constant
 subdata_buurt[iszero(subdata_buurt)] <- placeholder # set 0 to 999999
 subdata_buurt[is.na(subdata_buurt)] <- 0 # set missing to 0
-subdata_buurt <- aggregate(subdata_buurt[,3:137], by=list(subdata_buurt$bc_code, subdata_buurt$bc_naam), FUN=sum) # aggregate data with sum
+subdata_buurt <- aggregate(subdata_buurt[,3:129], by=list(subdata_buurt$bc_code, subdata_buurt$bc_naam), FUN=sum) # aggregate data with sum
 subdata_buurt[iszero(subdata_buurt)] <- NA # set 0 to missing
-subdata_buurt[,3:137] <- subdata_buurt[,3:137] %% placeholder # all modulo 999999
+subdata_buurt[,3:129] <- subdata_buurt[,3:129] %% placeholder # all modulo 999999
 
 
 # TO DO
-# Get vote share data in absolute numbers
-# Correct all relative variables to absolute
+# V Get vote share data in absolute numbers
+# V Correct all relative variables to absolute: only education variable?
+# Make into percentage variables again
 # Collect gentrification data
 # Collect missing education + unemployment data
+# Transform into long data
