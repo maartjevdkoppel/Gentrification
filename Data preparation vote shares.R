@@ -129,7 +129,7 @@ independentvars <- c("gebiedcode15", "gebiednaam", "jaar", "BEVTOTAAL", "BEVSUR"
                      "BEVOPLHOOG_P", "BEV15_19", "BEV20_24", "BEV25_29",
                      "BEV30_34", "BEV35_39", "BEV40_44", "BEV45_49", 
                      "BEV50_54", "BEV55_59", "BEV60_64", "BEV65_69",
-                     "BEV70_74", "PREGWERKL", "WHUURTSLG_P", "WVOORRBAG")
+                     "BEV70_74", "PREGWERKL", "BEVPOTBBV15_65", "WHUURTSLG_P", "WVOORRBAG")
 buurtdata <- buurtdata[independentvars]
 # NOTE: Unemployment information is unavailable for 2005 and 2009 (from 2010 onwards).
 # NOTE: Education information is unavailable for 2006.
@@ -290,34 +290,72 @@ iszero <- function(x) {x== 0}
 placeholder <- 999999 # make 999999 constant
 subdata_buurt[iszero(subdata_buurt)] <- placeholder # set 0 to 999999
 subdata_buurt[is.na(subdata_buurt)] <- 0 # set missing to 0
-subdata_buurt <- aggregate(subdata_buurt[,3:137], by=list(bc_code=subdata_buurt$bc_code, bc_naam=subdata_buurt$bc_naam), FUN=sum) # aggregate data with sum
+subdata_buurt <- aggregate(subdata_buurt[,-c(1:2)], by=list(bc_code=subdata_buurt$bc_code, bc_naam=subdata_buurt$bc_naam), FUN=sum) # aggregate data with sum
 subdata_buurt[iszero(subdata_buurt)] <- NA # set 0 to missing
-subdata_buurt[,3:137] <- subdata_buurt[,3:137] %% placeholder # all modulo 999999
+subdata_buurt[,-c(1:2)] <- subdata_buurt[,-c(1:2)] %% placeholder # all modulo 999999
 
 # COMPLETE DATASET - Percentage variables ----------------------------------------------------------------
 
-# Neighbourhood characteristics 
-buurt_vars_2005 <- c(15:44)
-buurt_vars_2009 <- c(46:75)
-buurt_vars_2013 <- c(77:106)
-buurt_vars_2017 <- c(108:137)
+# Housing variables - divide by WVOORRBAG
+# Many missings, because both WHUUR and WVOOR have many missing
+house_vars      <- startsWith(names(subdata_buurt), "WHUUR")
+house_vars_2005 <- house_vars & endsWith(names(subdata_buurt), "2005")
+house_vars_2009 <- house_vars & endsWith(names(subdata_buurt), "2009")
+house_vars_2013 <- house_vars & endsWith(names(subdata_buurt), "2013")
+house_vars_2017 <- house_vars & endsWith(names(subdata_buurt), "2017")
+
+subdata_buurt[,house_vars_2005] <- (subdata_buurt[,house_vars_2005] / subdata_buurt$WVOORRBAG_2005) * 100
+subdata_buurt[,house_vars_2009] <- (subdata_buurt[,house_vars_2009] / subdata_buurt$WVOORRBAG_2009) * 100
+subdata_buurt[,house_vars_2013] <- (subdata_buurt[,house_vars_2013] / subdata_buurt$WVOORRBAG_2013) * 100
+subdata_buurt[,house_vars_2017] <- (subdata_buurt[,house_vars_2017] / subdata_buurt$WVOORRBAG_2017) * 100
+
+# Unemployment variable - divide by BEV15-65
+work_vars      <- startsWith(names(subdata_buurt), "PREG")
+work_vars_2005 <- work_vars & endsWith(names(subdata_buurt), "2005")
+work_vars_2009 <- work_vars & endsWith(names(subdata_buurt), "2009")
+work_vars_2013 <- work_vars & endsWith(names(subdata_buurt), "2013")
+work_vars_2017 <- work_vars & endsWith(names(subdata_buurt), "2017")
+
+subdata_buurt[,work_vars_2005] <- (subdata_buurt[,work_vars_2005] / subdata_buurt$`BEVPOTBBV15-65_2005`) * 100
+subdata_buurt[,work_vars_2009] <- (subdata_buurt[,work_vars_2009] / subdata_buurt$`BEVPOTBBV15-65_2009`) * 100
+subdata_buurt[,work_vars_2013] <- (subdata_buurt[,work_vars_2013] / subdata_buurt$`BEVPOTBBV15-65_2013`) * 100
+subdata_buurt[,work_vars_2017] <- (subdata_buurt[,work_vars_2017] / subdata_buurt$`BEVPOTBBV15-65_2017`) * 100
+
+# Education variables - divide by BEV15-74
+edu_vars      <- startsWith(names(subdata_buurt), "BEVOPL")
+edu_vars_2005 <- edu_vars & endsWith(names(subdata_buurt), "2005")
+edu_vars_2009 <- edu_vars & endsWith(names(subdata_buurt), "2009")
+edu_vars_2013 <- edu_vars & endsWith(names(subdata_buurt), "2013")
+edu_vars_2017 <- edu_vars & endsWith(names(subdata_buurt), "2017")
+
+subdata_buurt[,edu_vars_2005] <- (subdata_buurt[,edu_vars_2005] / subdata_buurt$`BEV15-74_2005`) * 100
+subdata_buurt[,edu_vars_2009] <- (subdata_buurt[,edu_vars_2009] / subdata_buurt$`BEV15-74_2009`) * 100
+subdata_buurt[,edu_vars_2013] <- (subdata_buurt[,edu_vars_2013] / subdata_buurt$`BEV15-74_2013`) * 100
+subdata_buurt[,edu_vars_2017] <- (subdata_buurt[,edu_vars_2017] / subdata_buurt$`BEV15-74_2017`) * 100
+
+# Population characteristics - divide by BEVTOTAAL
+buurt_vars <- startsWith(names(subdata_buurt), "BEV") & !edu_vars & !startsWith(names(subdata_buurt), "BEVTOTAAL")
+buurt_vars_2005 <- buurt_vars & endsWith(names(subdata_buurt), "2005")
+buurt_vars_2009 <- buurt_vars & endsWith(names(subdata_buurt), "2009")
+buurt_vars_2013 <- buurt_vars & endsWith(names(subdata_buurt), "2013")
+buurt_vars_2017 <- buurt_vars & endsWith(names(subdata_buurt), "2017")
 
 subdata_buurt[,buurt_vars_2005] <- (subdata_buurt[,buurt_vars_2005] / subdata_buurt$BEVTOTAAL_2005) * 100
 subdata_buurt[,buurt_vars_2009] <- (subdata_buurt[,buurt_vars_2009] / subdata_buurt$BEVTOTAAL_2009) * 100
 subdata_buurt[,buurt_vars_2013] <- (subdata_buurt[,buurt_vars_2013] / subdata_buurt$BEVTOTAAL_2013) * 100
 subdata_buurt[,buurt_vars_2017] <- (subdata_buurt[,buurt_vars_2017] / subdata_buurt$BEVTOTAAL_2017) * 100
 
-# Vote shares 
+# Rename PvdA to PVDA for consistency
+names(subdata_buurt) <- str_replace(names(subdata_buurt), "PvdA", "PVDA")
+
+# Vote shares - divide by total number of valid votes 
 subdata_buurt$PVDA_2006 <- (subdata_buurt$PVDA_2006 / subdata_buurt$totaal_2006) * 100
-subdata_buurt$PvdA_2010 <- (subdata_buurt$PvdA_2010 / subdata_buurt$totaal_2010) * 100
+subdata_buurt$PVDA_2010 <- (subdata_buurt$PVDA_2010 / subdata_buurt$totaal_2010) * 100
 subdata_buurt$PVDA_2014 <- (subdata_buurt$PVDA_2014 / subdata_buurt$totaal_2014) * 100
-subdata_buurt$PvdA_2018 <- (subdata_buurt$PvdA_2018 / subdata_buurt$totaal_2018) * 100
+subdata_buurt$PVDA_2018 <- (subdata_buurt$PVDA_2018 / subdata_buurt$totaal_2018) * 100
 subdata_buurt$MPP_2014  <- (subdata_buurt$MPP_2014  / subdata_buurt$totaal_2014) * 100
 subdata_buurt$DENK_2018 <- (subdata_buurt$DENK_2018 / subdata_buurt$totaal_2018) * 100
 subdata_buurt$BIJ1_2018 <- (subdata_buurt$BIJ1_2018 / subdata_buurt$totaal_2018) * 100
-
-# Rename PvdA to PVDA for consistency
-names(subdata_buurt) <- str_replace(names(subdata_buurt), "PvdA", "PVDA")
 
 # Variables for changes in party support
 subdata_buurt$PVDAdelta2006_2010 <- subdata_buurt$PVDA_2010 - subdata_buurt$PVDA_2006
@@ -354,7 +392,7 @@ subdata_buurt_long <- subdata_buurt_longest %>% pivot_wider(
 # Add variable indicating measurement year for neighbourhood variables (election year - 1)
 subdata_buurt_long$jaar           <- as.numeric(subdata_buurt_long$jaar)
 subdata_buurt_long$jaar_buurtvars <- subdata_buurt_long$jaar - 1
-subdata_buurt_long                <- subdata_buurt_long[,c(1:3,43,4:8,40:42,9:39)] # Change if adding more variables to dataset!
+subdata_buurt_long                <- subdata_buurt_long[,c(1:3,44,4:8,41:43,9:40)] # Change if adding more variables to dataset!
 
 # Export long data
 write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.csv", row.names = FALSE)
