@@ -115,7 +115,34 @@ columnnames <- names(read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtk
 columntypes <- ifelse(grepl("^[A-Z]", columnnames),"numeric", "guess")
 buurtdata <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken (versie 10-3-21).xlsx", sheet = 1, col_names = TRUE, col_types = columntypes)
 
+# Read 'Woningvoorraad 1995-2014' and 'Woningvoorraad 2011-2021' for data on changes in housing stock over time
+# Data can be retrieved from https://data.amsterdam.nl/datasets/XBHSC-xM8UmROQ/tijdreeksen-wijken/
+housingdata_0509 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvoorraad 1995-2014.csv", col_names = TRUE)
+housingdata_1317 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvoorraad 2011-2021.csv", col_names = TRUE)
+
 # NEIGHBOURHOOD DATA - Preparing data ---------------------------------------------------------------------------
+
+# HOUSINGDATA
+
+# Create bc_code variable for merging
+housingdata_0509$bc_code <- substr(housingdata_0509$`naam bc/std`, 1, 3) # extract BC code
+housingdata_1317$bc_code <- substr(housingdata_1317$`indeling buurtcombinaties 2015 1)`, 1, 3) # extract BC code
+
+# Subset to relevant years: 2005, 2009, 2013 and 2017
+housingdata_0509 <- select(housingdata_0509, c(bc_code, `2005`, `2009`))
+housingdata_1317 <- select(housingdata_1317, c(bc_code, `2013`, `2017`))
+
+# Convert to long data, needed to merge with 'buurtdata'
+housingdata_0509 <- pivot_longer(housingdata_0509, cols = `2005`:`2009`, names_to = "jaar", values_to = "WVOORRBAG")
+housingdata_1317 <- pivot_longer(housingdata_1317, cols = `2013`:`2017`, names_to = "jaar", values_to = "WVOORRBAG")
+
+# Combine the two datasets
+housingdata <- rbind(housingdata_0509, housingdata_1317)
+
+# Set WVOORRBAG to numeric
+housingdata$WVOORRBAG <- as.numeric(housingdata$WVOORRBAG)
+
+# BUURTDATA
 
 # Subset to neighbourhood-level data only ('Wijken')
 unique(buurtdata$niveaunaam)
@@ -129,17 +156,21 @@ independentvars <- c("gebiedcode15", "gebiednaam", "jaar", "BEVTOTAAL", "BEVSUR"
                      "BEVOPLHOOG_P", "BEV15_19", "BEV20_24", "BEV25_29",
                      "BEV30_34", "BEV35_39", "BEV40_44", "BEV45_49", 
                      "BEV50_54", "BEV55_59", "BEV60_64", "BEV65_69",
-                     "BEV70_74", "PREGWERKL", "BEVPOTBBV15_65", "WHUURTSLG_P", "WVOORRBAG")
+                     "BEV70_74", "PREGWERKL", "BEVPOTBBV15_65", "WHUURTSLG_P")
 buurtdata <- buurtdata[independentvars]
 # NOTE: Unemployment information is unavailable for 2005 and 2009 (from 2010 onwards).
 # NOTE: Education information is unavailable for 2006.
+
+# Merge housing stock data into 'buurtdata'
+buurtdata <- buurtdata %>% rename(bc_code = gebiedcode15) # rename merge variable 
+buurtdata <- merge(buurtdata, housingdata, by=c("bc_code", "jaar"), all = TRUE)
 
 # Create variable for percentage of population aged 15-74
 # This variable is needed to convert the education variables from relative to absolute numbers,
 # which is necessary when buurtcombinatie observations are combined (only those observations with N/A)
 buurtdata$BEV15_74 <- (buurtdata$BEV15_19 + buurtdata$BEV20_24 + buurtdata$BEV25_29 + buurtdata$BEV30_34 +
-                       buurtdata$BEV35_39 + buurtdata$BEV40_44 + buurtdata$BEV45_49 + buurtdata$BEV50_54 +
-                       buurtdata$BEV55_59 + buurtdata$BEV60_64 + buurtdata$BEV65_69 + buurtdata$BEV70_74)
+                         buurtdata$BEV35_39 + buurtdata$BEV40_44 + buurtdata$BEV45_49 + buurtdata$BEV50_54 +
+                         buurtdata$BEV55_59 + buurtdata$BEV60_64 + buurtdata$BEV65_69 + buurtdata$BEV70_74)
 
 # Transform relative education variables into absolute variables
 buurtdata$BEVOPLLAAG <- (buurtdata$BEVOPLLAAG_P * buurtdata$BEV15_74) / 100
@@ -171,10 +202,10 @@ names(buurtdata2017) <- paste0(names(buurtdata2017), "_2017")
 
 # Rename merge variables
 subdata       <- subdata       %>% rename(bc_code = bc_code_2018)
-buurtdata2005 <- buurtdata2005 %>% rename(bc_code = gebiedcode15_2005)
-buurtdata2009 <- buurtdata2009 %>% rename(bc_code = gebiedcode15_2009)
-buurtdata2013 <- buurtdata2013 %>% rename(bc_code = gebiedcode15_2013)
-buurtdata2017 <- buurtdata2017 %>% rename(bc_code = gebiedcode15_2017)
+buurtdata2005 <- buurtdata2005 %>% rename(bc_code = `bc-code_2005`)
+buurtdata2009 <- buurtdata2009 %>% rename(bc_code = `bc-code_2009`)
+buurtdata2013 <- buurtdata2013 %>% rename(bc_code = `bc-code_2013`)
+buurtdata2017 <- buurtdata2017 %>% rename(bc_code = `bc-code_2017`)
 
 # Merge vote share data + neighbourhood data 
 subdata_buurt <- merge(subdata,       buurtdata2005, by="bc_code", all=TRUE)
@@ -262,7 +293,7 @@ subdata_buurt <- rename.bc(subdata_buurt, condition, "N60+N71", "Volewijck + Bui
 # Spaarndammer- en Zeeheldenbuurt + Houthavens
 condition     <- subdata_buurt$bc_code == "E12" | subdata_buurt$bc_code == "E13" | subdata_buurt$bc_code == "E13+E12"
 subdata_buurt <- rename.bc(subdata_buurt, condition, "E13+12", "Spaarndammer- en Zeeheldenbuurt + Houthavens")
-    
+
 # Landlust + Sloterdijk
 condition     <- subdata_buurt$bc_code == "E36" | subdata_buurt$bc_code == "E37" | subdata_buurt$bc_code == "E37+E36"
 subdata_buurt <- rename.bc(subdata_buurt, condition, "E37+E36", "Landlust + Sloterdijk") 
@@ -277,8 +308,10 @@ subdata_buurt <- rename.bc(subdata_buurt, condition, "T96+T92", "Holendrecht/Rei
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# Drop neighbourhoods 'M50' (not present in voting data) and 'Z99' (false BC code)
-subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "Z99",]
+# Drop neighbourhoods 
+# 'M50' is not present in the voting data, 'Z99' is a false code or non-existent neighbourhood
+# 'K23' ('Zuidas') is dropped as it was newly created in 2018 from 4 constitutive parts (K59, K52, K90 and K91) which also continue to exist
+subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "Z99" & subdata_buurt$bc_code != "K23",]
 
 # New back-up of data
 subdata_buurt_backup <- subdata_buurt
@@ -389,19 +422,47 @@ subdata_buurt_long <- subdata_buurt_longest %>% pivot_wider(
   values_from = waarde
 )
 
+# COMPLETE DATASET - Tidy & export ---------------------------------------------------------------------------
+
 # Add variable indicating measurement year for neighbourhood variables (election year - 1)
 subdata_buurt_long$jaar           <- as.numeric(subdata_buurt_long$jaar)
 subdata_buurt_long$jaar_buurtvars <- subdata_buurt_long$jaar - 1
-subdata_buurt_long                <- subdata_buurt_long[,c(1:3,44,4:8,41:43,9:40)] # Change if adding more variables to dataset!
+
+# Drop redundant variables, i.e. not needed for analysis
+subdata_buurt_long = subset(subdata_buurt_long, select = -c(totaal, BEVTOTAAL, `BEV15-19`, `BEV20-24`, 
+                                                            `BEV25-29`, `BEV30-34`, `BEV35-39`, 
+                                                            `BEV40-44`, `BEV45-49`, `BEV50-54`, 
+                                                            `BEV55-59`, `BEV60-64`, `BEV65-69`, 
+                                                            `BEV70-74`, `BEVPOTBBV15-65`, `BEV15-74`, 
+                                                            WVOORRBAG))
+
+# Rename variables 
+subdata_buurt_long <- subdata_buurt_long %>% rename(bc_name      = bc_naam)
+subdata_buurt_long <- subdata_buurt_long %>% rename(year         = jaar)
+subdata_buurt_long <- subdata_buurt_long %>% rename(year_BCvars  = jaar_buurtvars)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Sur      = BEVSUR)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Ant      = BEVANTIL)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Tur      = BEVTURK)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Mar      = BEVMAROK)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_otherNW  = BEVOVNW)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_W        = BEVWEST)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_autoch   = BEVAUTOCH)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_0t18     = `BEV0-18`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_18t26    = `BEV18-26`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_27t65    = `BEV27-65`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_66plus   = BEV66PLUS)
+subdata_buurt_long <- subdata_buurt_long %>% rename(unempl       = PREGWERKL)
+subdata_buurt_long <- subdata_buurt_long %>% rename(edu_low      = BEVOPLLAAG)
+subdata_buurt_long <- subdata_buurt_long %>% rename(edu_mid      = BEVOPLMID)
+subdata_buurt_long <- subdata_buurt_long %>% rename(edu_high     = BEVOPLHOOG)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc  = WHUURTSLG)
+
+# Reorder columns
+# TO CHANGE!
+#subdata_buurt_long <- subdata_buurt_long[,c(1:3,44,4:8,41:43,9:40)] # Change if adding more variables to dataset!
 
 # Export long data
 write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.csv", row.names = FALSE)
 
 # TO DO
-# V Get vote share data in absolute numbers
-# V Correct all relative variables to absolute: only education variable?
-# V Make into percentage variables again
-# Collect gentrification data
-# Collect missing education, unemployment & social housing data
-# V Transform into long data
-# V Create change in party support variables (absolute change)
+# individuele buurtcodes uit Woningvoorraad data moet in neighbourhood merge toegevoegd worden in de code. 
