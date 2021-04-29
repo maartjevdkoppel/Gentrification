@@ -124,6 +124,9 @@ housingdata_1317 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvo
 
 # HOUSINGDATA
 
+# Remove empty rows from housingdata_1317
+housingdata_1317 <- housingdata_1317[complete.cases(housingdata_1317),]
+
 # Create bc_code variable for merging
 housingdata_0509$bc_code <- substr(housingdata_0509$`naam bc/std`, 1, 3) # extract BC code
 housingdata_1317$bc_code <- substr(housingdata_1317$`indeling buurtcombinaties 2015 1)`, 1, 3) # extract BC code
@@ -229,41 +232,45 @@ subdata_buurt$bc_naam <- ifelse(is.na(subdata_buurt$bc_naam), "", subdata_buurt$
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+# Create dummy variable: indicate whether neighbourhood was created through combination of others (by hand, see below)
+subdata_buurt$BCcombined <- 0
+
 # Rename all neighbourhoods to be merged
 # Specify renaming function
-rename.bc <- function(x, condition, code, name){
+rename.bc <- function(x, condition, code, name, combined = FALSE){
   x$bc_code <- ifelse(condition, code, x$bc_code) # change BC code
   x$bc_naam <- ifelse(condition, name, x$bc_naam) # change BC name
+  if(combined){x$BCcombined <- ifelse(condition, 1, x$BCcombined)}
   x
 }
 
 # De Krommert: Chassébuurt + Geuzenbuurt
 condition     <- subdata_buurt$bc_naam == "De Krommert" | subdata_buurt$bc_naam == "Chassébuurt" | subdata_buurt$bc_naam == "Geuzenbuurt"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "E40+E75", "De Krommert: Chassébuurt + Geuzenbuurt")
+subdata_buurt <- rename.bc(subdata_buurt, condition, "E40+E75", "De Krommert: Chassébuurt + Geuzenbuurt", TRUE)
 
 # Diamantbuurt/Zuid Pijp
 condition     <- subdata_buurt$bc_naam == "Diamantbuurt" | subdata_buurt$bc_naam == "Zuid Pijp"
 subdata_buurt <- rename.bc(subdata_buurt, condition, "K26", "Diamantbuurt/Zuid Pijp")
 
 # Museumkwartier + Duivelseiland 
-condition     <- subdata_buurt$bc_naam == "Duivelseiland" | subdata_buurt$bc_naam == "Museumkwartier" | subdata_buurt$bc_naam == "Museumkwartier + Duivelseiland"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "K47+K50", "Museumkwartier + Duivelseiland")
+condition     <- subdata_buurt$bc_naam == "Duivelseiland" | subdata_buurt$bc_naam == "Museumkwartier" | subdata_buurt$bc_naam == "Museumkwartier + Duivelseiland" | subdata_buurt$bc_code == "K50"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "K47+K50", "Museumkwartier + Duivelseiland", TRUE)
 
 # Buikslotermeer + Elzenhagen
 condition     <- subdata_buurt$bc_naam == "Elzenhagen" | subdata_buurt$bc_naam == "Buikslotermeer"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "N69+N74", "Buikslotermeer + Elzenhagen")
+subdata_buurt <- rename.bc(subdata_buurt, condition, "N69+N74", "Buikslotermeer + Elzenhagen", TRUE)
 
 # Frankendael + De Omval/Overamstel
 condition     <- subdata_buurt$bc_naam == "Frankendael" | subdata_buurt$bc_naam == "Frankendael + De Omval" | subdata_buurt$bc_naam == "De Omval" | subdata_buurt$bc_naam == "Omval/Overamstel"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "M55+M58", "Frankendael + De Omval/Overamstel")
+subdata_buurt <- rename.bc(subdata_buurt, condition, "M55+M58", "Frankendael + De Omval/Overamstel", TRUE)
 
 # IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost
 condition     <- subdata_buurt$bc_naam == "IJburg West" | subdata_buurt$bc_naam == "IJburg West + Zeeburgereiland/Nieuwe Diep" | subdata_buurt$bc_naam == "Indische Buurt Oost" | subdata_buurt$bc_naam == "Indische Buurt Oost + Zeeburgereiland/Nieuwe Diep" | subdata_buurt$bc_naam == "Zeeburgereiland/Nieuwe Diep"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "M32+M34+M35", "IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost")
+subdata_buurt <- rename.bc(subdata_buurt, condition, "M32+M34+M35", "IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost", TRUE)
 
 # IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost
 condition     <- subdata_buurt$bc_naam == "IJplein/Vogelbuurt + Nieuwendammerham" | subdata_buurt$bc_naam == "IJplein/Vogelbuurt + Noordelijke IJ-oevers Oost" | subdata_buurt$bc_code == "N61" | subdata_buurt$bc_code == "N72"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "N61+N72", "IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost")
+subdata_buurt <- rename.bc(subdata_buurt, condition, "N61+N72", "IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost", TRUE)
 
 # Middelveldsche Akerpolder/Sloten
 condition     <- subdata_buurt$bc_naam == "Middelveldsche Akerpolder" | subdata_buurt$bc_naam == "Middelveldsche Akerpolder/Sloten"
@@ -278,16 +285,16 @@ condition     <- subdata_buurt$bc_naam == "Prinses Irenebuurt e.o." | subdata_bu
 subdata_buurt <- rename.bc(subdata_buurt, condition, "K59", "Prinses Irenebuurt e.o./Station Zuid/WTC e.o.")
 
 # Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk
-condition     <- subdata_buurt$bc_naam == "Slotermeer-Noordoost" | subdata_buurt$bc_naam == "Slotermeer-Noordoost + Spieringhorn" | subdata_buurt$bc_naam == "Westelijk Havengebied + Bedrijventerrein Sloterdijk" | subdata_buurt$bc_code == "B10" | subdata_buurt$bc_code == "F11"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "F76+F75+B10+F11", "Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk")
+condition     <- subdata_buurt$bc_naam == "Slotermeer-Noordoost" | subdata_buurt$bc_naam == "Slotermeer-Noordoost + Spieringhorn" | subdata_buurt$bc_naam == "Westelijk Havengebied + Bedrijventerrein Sloterdijk" | subdata_buurt$bc_code == "B10" | subdata_buurt$bc_code == "F11" | subdata_buurt$bc_code == "B11" | subdata_buurt$bc_code == "F75"
+subdata_buurt <- rename.bc(subdata_buurt, condition, "F76+F75+B10+F11", "Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk", TRUE)
 
 # Slotervaart: Slotervaart Noord + Slotervaart Zuid
 condition     <- subdata_buurt$bc_naam == "Slotervaart" | subdata_buurt$bc_naam == "Slotervaart Noord" | subdata_buurt$bc_naam == "Slotervaart Zuid"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "F85+F89", "Slotervaart: Slotervaart Noord + Slotervaart Zuid")
+subdata_buurt <- rename.bc(subdata_buurt, condition, "F85+F89", "Slotervaart: Slotervaart Noord + Slotervaart Zuid", TRUE)
 
 # Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West
 condition     <- subdata_buurt$bc_naam == "Volewijck + Buiksloterham" | subdata_buurt$bc_naam == "Volewijck + Noordelijke IJ-oevers West" | subdata_buurt$bc_code == "N60" | subdata_buurt$bc_code == "N71"
-subdata_buurt <- rename.bc(subdata_buurt, condition, "N60+N71", "Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West")
+subdata_buurt <- rename.bc(subdata_buurt, condition, "N60+N71", "Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West", TRUE)
 
 # Following neighbourhoods were consistent in vote share data, but failed to merge with the neighbourhood characteristics data (e.g. not in neighbourhood data as a combined code)
 # Spaarndammer- en Zeeheldenbuurt + Houthavens
@@ -326,6 +333,15 @@ subdata_buurt[is.na(subdata_buurt)] <- 0 # set missing to 0
 subdata_buurt <- aggregate(subdata_buurt[,-c(1:2)], by=list(bc_code=subdata_buurt$bc_code, bc_naam=subdata_buurt$bc_naam), FUN=sum) # aggregate data with sum
 subdata_buurt[iszero(subdata_buurt)] <- NA # set 0 to missing
 subdata_buurt[,-c(1:2)] <- subdata_buurt[,-c(1:2)] %% placeholder # all modulo 999999
+
+# Dummify BCcombined again, since 'aggregate' summed observations and it no longer 0 or 1 for all
+subdata_buurt$BCcombined <- ifelse(subdata_buurt$BCcombined != 0, 1, 0)
+
+# Clone BCcombined so there are separate variables for 2005, 2009, 2013 and 2017: needed for restructuring to long data
+subdata_buurt$BCcombined_2009 <- subdata_buurt$BCcombined
+subdata_buurt$BCcombined_2013 <- subdata_buurt$BCcombined
+subdata_buurt$BCcombined_2017 <- subdata_buurt$BCcombined
+subdata_buurt <- subdata_buurt %>% rename(BCcombined_2005 = BCcombined)
 
 # COMPLETE DATASET - Percentage variables ----------------------------------------------------------------
 
@@ -390,6 +406,16 @@ subdata_buurt$MPP_2014  <- (subdata_buurt$MPP_2014  / subdata_buurt$totaal_2014)
 subdata_buurt$DENK_2018 <- (subdata_buurt$DENK_2018 / subdata_buurt$totaal_2018) * 100
 subdata_buurt$BIJ1_2018 <- (subdata_buurt$BIJ1_2018 / subdata_buurt$totaal_2018) * 100
 
+# Variables for changes in social housing
+subdata_buurt$WHUURTSLGdelta2005_2009 <- subdata_buurt$WHUURTSLG_2009 - subdata_buurt$WHUURTSLG_2005
+subdata_buurt$WHUURTSLGdelta2005_2013 <- subdata_buurt$WHUURTSLG_2013 - subdata_buurt$WHUURTSLG_2005
+subdata_buurt$WHUURTSLGdelta2005_2017 <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2005
+
+subdata_buurt$WHUURTSLGdelta2009_2013 <- subdata_buurt$WHUURTSLG_2013 - subdata_buurt$WHUURTSLG_2009
+subdata_buurt$WHUURTSLGdelta2009_2017 <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2009
+
+subdata_buurt$WHUURTSLGdelta2013_2017 <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2013
+
 # Variables for changes in party support
 subdata_buurt$PVDAdelta2006_2010 <- subdata_buurt$PVDA_2010 - subdata_buurt$PVDA_2006
 subdata_buurt$PVDAdelta2006_2014 <- subdata_buurt$PVDA_2014 - subdata_buurt$PVDA_2006
@@ -437,25 +463,32 @@ subdata_buurt_long = subset(subdata_buurt_long, select = -c(totaal, BEVTOTAAL, `
                                                             WVOORRBAG))
 
 # Rename variables 
-subdata_buurt_long <- subdata_buurt_long %>% rename(bc_name      = bc_naam)
-subdata_buurt_long <- subdata_buurt_long %>% rename(year         = jaar)
-subdata_buurt_long <- subdata_buurt_long %>% rename(year_BCvars  = jaar_buurtvars)
-subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Sur      = BEVSUR)
-subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Ant      = BEVANTIL)
-subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Tur      = BEVTURK)
-subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Mar      = BEVMAROK)
-subdata_buurt_long <- subdata_buurt_long %>% rename(imm_otherNW  = BEVOVNW)
-subdata_buurt_long <- subdata_buurt_long %>% rename(imm_W        = BEVWEST)
-subdata_buurt_long <- subdata_buurt_long %>% rename(imm_autoch   = BEVAUTOCH)
-subdata_buurt_long <- subdata_buurt_long %>% rename(age_0t18     = `BEV0-18`)
-subdata_buurt_long <- subdata_buurt_long %>% rename(age_18t26    = `BEV18-26`)
-subdata_buurt_long <- subdata_buurt_long %>% rename(age_27t65    = `BEV27-65`)
-subdata_buurt_long <- subdata_buurt_long %>% rename(age_66plus   = BEV66PLUS)
-subdata_buurt_long <- subdata_buurt_long %>% rename(unempl       = PREGWERKL)
-subdata_buurt_long <- subdata_buurt_long %>% rename(edu_low      = BEVOPLLAAG)
-subdata_buurt_long <- subdata_buurt_long %>% rename(edu_mid      = BEVOPLMID)
-subdata_buurt_long <- subdata_buurt_long %>% rename(edu_high     = BEVOPLHOOG)
-subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc  = WHUURTSLG)
+subdata_buurt_long <- subdata_buurt_long %>% rename(bc_name                = bc_naam)
+subdata_buurt_long <- subdata_buurt_long %>% rename(year                   = jaar)
+subdata_buurt_long <- subdata_buurt_long %>% rename(year_BCvars            = jaar_buurtvars)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Sur                = BEVSUR)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Ant                = BEVANTIL)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Tur                = BEVTURK)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_Mar                = BEVMAROK)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_otherNW            = BEVOVNW)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_W                  = BEVWEST)
+subdata_buurt_long <- subdata_buurt_long %>% rename(imm_autoch             = BEVAUTOCH)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_0t18               = `BEV0-18`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_18t26              = `BEV18-26`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_27t65              = `BEV27-65`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_66plus             = BEV66PLUS)
+subdata_buurt_long <- subdata_buurt_long %>% rename(unempl                 = PREGWERKL)
+subdata_buurt_long <- subdata_buurt_long %>% rename(edu_low                = BEVOPLLAAG)
+subdata_buurt_long <- subdata_buurt_long %>% rename(edu_mid                = BEVOPLMID)
+subdata_buurt_long <- subdata_buurt_long %>% rename(edu_high               = BEVOPLHOOG)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc            = WHUURTSLG)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2005  = WHUURTSLGdelta2006)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2009  = WHUURTSLGdelta2010)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2013  = WHUURTSLGdelta2014)
+subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2006         = PVDAdelta2006)
+subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2010         = PVDAdelta2010)
+subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2014         = PVDAdelta2014)       
+subdata_buurt_long <- subdata_buurt_long %>% rename(bc_combined            = BCcombined)
 
 # Reorder columns
 # TO CHANGE!
@@ -464,5 +497,4 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc  = WHUURTSLG)
 # Export long data
 write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.csv", row.names = FALSE)
 
-# TO DO
-# individuele buurtcodes uit Woningvoorraad data moet in neighbourhood merge toegevoegd worden in de code. 
+
