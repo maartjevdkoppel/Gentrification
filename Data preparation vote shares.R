@@ -406,25 +406,38 @@ subdata_buurt$MPP_2014  <- (subdata_buurt$MPP_2014  / subdata_buurt$totaal_2014)
 subdata_buurt$DENK_2018 <- (subdata_buurt$DENK_2018 / subdata_buurt$totaal_2018) * 100
 subdata_buurt$BIJ1_2018 <- (subdata_buurt$BIJ1_2018 / subdata_buurt$totaal_2018) * 100
 
+# Variable for total vote share for multicultural parties: add vote shares for MPP (2014), DENK and BIJ1 (both 2018)
+# There are no multicultural parties represented in the 2006 and 2010 elections
+subdata_buurt$MCparties_2014 <- subdata_buurt$MPP_2014                             # For 2014: only the vote share of M+
+subdata_buurt$MCparties_2018 <- subdata_buurt$DENK_2018 + subdata_buurt$BIJ1_2018  # For 2018: add vote shares of DENK and BIJ1
+  
 # Variables for changes in social housing
-subdata_buurt$WHUURTSLGdelta2005_2009 <- subdata_buurt$WHUURTSLG_2009 - subdata_buurt$WHUURTSLG_2005
+subdata_buurt$WHUURTSLGdelta2005_2009 <- subdata_buurt$WHUURTSLG_2009 - subdata_buurt$WHUURTSLG_2005 # all differences with 2005
 subdata_buurt$WHUURTSLGdelta2005_2013 <- subdata_buurt$WHUURTSLG_2013 - subdata_buurt$WHUURTSLG_2005
 subdata_buurt$WHUURTSLGdelta2005_2017 <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2005
 
-subdata_buurt$WHUURTSLGdelta2009_2013 <- subdata_buurt$WHUURTSLG_2013 - subdata_buurt$WHUURTSLG_2009
+subdata_buurt$WHUURTSLGdelta2009_2013 <- subdata_buurt$WHUURTSLG_2013 - subdata_buurt$WHUURTSLG_2009 # all differences with 2009
 subdata_buurt$WHUURTSLGdelta2009_2017 <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2009
 
-subdata_buurt$WHUURTSLGdelta2013_2017 <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2013
+subdata_buurt$WHUURTSLGdelta2013_2017 <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2013 # all differences with 2013
+
+subdata_buurt$`WHUURTSLG_t-1_2009` <- subdata_buurt$WHUURTSLG_2009 - subdata_buurt$WHUURTSLG_2005 # all differences with t-1
+subdata_buurt$`WHUURTSLG_t-1_2013` <- subdata_buurt$WHUURTSLG_2013 - subdata_buurt$WHUURTSLG_2009
+subdata_buurt$`WHUURTSLG_t-1_2017` <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2013
 
 # Variables for changes in party support
-subdata_buurt$PVDAdelta2006_2010 <- subdata_buurt$PVDA_2010 - subdata_buurt$PVDA_2006
+subdata_buurt$PVDAdelta2006_2010 <- subdata_buurt$PVDA_2010 - subdata_buurt$PVDA_2006 # all differences with 2006
 subdata_buurt$PVDAdelta2006_2014 <- subdata_buurt$PVDA_2014 - subdata_buurt$PVDA_2006
 subdata_buurt$PVDAdelta2006_2018 <- subdata_buurt$PVDA_2018 - subdata_buurt$PVDA_2006
 
-subdata_buurt$PVDAdelta2010_2014 <- subdata_buurt$PVDA_2014 - subdata_buurt$PVDA_2010
+subdata_buurt$PVDAdelta2010_2014 <- subdata_buurt$PVDA_2014 - subdata_buurt$PVDA_2010 # all differences with 2010
 subdata_buurt$PVDAdelta2010_2018 <- subdata_buurt$PVDA_2018 - subdata_buurt$PVDA_2010
 
-subdata_buurt$PVDAdelta2014_2018 <- subdata_buurt$PVDA_2018 - subdata_buurt$PVDA_2014
+subdata_buurt$PVDAdelta2014_2018 <- subdata_buurt$PVDA_2018 - subdata_buurt$PVDA_2014 # all differences with 2014
+
+subdata_buurt$`PVDAt-1_2010` <- subdata_buurt$PVDA_2010 - subdata_buurt$PVDA_2006 # all differences with t-1
+subdata_buurt$`PVDAt-1_2014` <- subdata_buurt$PVDA_2014 - subdata_buurt$PVDA_2010
+subdata_buurt$`PVDAt-1_2018` <- subdata_buurt$PVDA_2018 - subdata_buurt$PVDA_2014
 
 # COMPLETE DATASET - Reshaping ---------------------------------------------------------------------------
 
@@ -436,7 +449,7 @@ names(subdata_buurt) <- str_replace(names(subdata_buurt), "2017", "2018")
 
 # Reshape all year-dependent variables to long structure 
 subdata_buurt_longest <- subdata_buurt %>% pivot_longer(
-  cols = PVDA_2006:PVDAdelta2014_2018, # Change if adding more variables to dataset!
+  cols = PVDA_2006:`PVDAt-1_2018`, # Change if adding more variables to dataset!
   names_to = c("kolomnaam", "jaar"), 
   names_pattern = "(.*)_(.*)",
   values_to = "waarde"
@@ -489,11 +502,14 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2006         = PVD
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2010         = PVDAdelta2010)
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2014         = PVDAdelta2014)       
 subdata_buurt_long <- subdata_buurt_long %>% rename(bc_combined            = BCcombined)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta      = `WHUURTSLG_t-1`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta             = `PVDAt-1`)
 
 # Reorder columns
 # TO CHANGE!
-#subdata_buurt_long <- subdata_buurt_long[,c(1:3,44,4:8,41:43,9:40)] # Change if adding more variables to dataset!
-
+#subdata_buurt_long <- subdata_buurt_long[,c(1:3,33,4:7,25,29:33,8:23,26:28,24)] # Change if adding more variables to dataset!
+subdata_buurt_long <- subdata_buurt_long[,c(1:3,34,4:7,25,30:33,8:23,26:29,24)] 
+  
 # Export long data
 write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.csv", row.names = FALSE)
 
