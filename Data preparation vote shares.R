@@ -125,20 +125,26 @@ housingdata_1317 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvo
 
 # Read data for employment variable
 # Data retrieved from OIS Amsterdam
-employ_2005 <- read_xls( "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2005_werkzame personen.xls",  skip = 4, col_names = TRUE)
-employ_2009 <- read_xls( "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2009_werkzame personen.xls",  skip = 4, col_names = TRUE)
-employ_2013 <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2013_werkzame personen.xlsx", skip = 2, col_names = TRUE)
-employ_2017 <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2017_werkzame personen.xlsx", skip = 2, col_names = TRUE)
+employ_2005 <- read_xls( "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2005_wwb_awb.xls",  skip = 4, col_names = TRUE)
+employ_2009 <- read_xls( "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2009_wwb.xls",  skip = 4, col_names = TRUE)
+employ_2013 <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2013_wwb.xlsx", skip = 4, col_names = TRUE)
+employ_2017 <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2017_wwb.xlsx", skip = 3, col_names = TRUE)
 
-employ_2005 <- employ_2005 %>% dplyr::filter(str_length(`bc/std`)   == 3 & `bc/std`   != "ASD")
+employ_2005 <- employ_2005 %>% dplyr::filter(str_length(`bc/std`)   == 3 & `bc/std`   != "ASD") # Keep only correct observations
 employ_2009 <- employ_2009 %>% dplyr::filter(str_length(`bc/std`)   == 3 & `bc/std`   != "ASD")
 employ_2013 <- employ_2013 %>% dplyr::filter(str_length(`bc/std`)   == 3 & `bc/std`   != "ASD")
 employ_2017 <- employ_2017 %>% dplyr::filter(str_length(`wijk/std`) == 3 & `wijk/std` != "ASD")
 
-employ_2005 <- employ_2005 %>% select(c(`bc/std`, `werk. pers....8` )) %>% rename(`brtk2005` = `bc/std`  ) %>% rename(employ = `werk. pers....8`)
-employ_2009 <- employ_2009 %>% select(c(`bc/std`, `werkz. pers....8`)) %>% rename(`brtk2005` = `bc/std`  ) %>% rename(employ = `werkz. pers....8`)
-employ_2013 <- employ_2013 %>% select(c(`bc/std`, `2013`            )) %>% rename(`bc-code` = `bc/std`  ) %>% rename(employ = `2013`)
-employ_2017 <- employ_2017 %>% select(c(`wijk/std`, `2017`          )) %>% rename(`bc-code` = `wijk/std`) %>% rename(employ = `2017`)
+issomething <- function(x) {x== "*" | x== "-"} # set missing values to N/A
+employ_2005[issomething(employ_2005)] <- NA 
+employ_2009[issomething(employ_2009)] <- NA 
+employ_2013[issomething(employ_2013)] <- NA 
+employ_2017[issomething(employ_2017)] <- NA 
+
+employ_2005 <- employ_2005 %>% select(c(`bc/std`, `2005...5`))        %>% rename(`brtk2005` = `bc/std`)   %>% rename(employ = `2005...5`)
+employ_2009 <- employ_2009 %>% select(c(`bc/std`, `2009...5`))        %>% rename(`brtk2005` = `bc/std`)   %>% rename(employ = `2009...5`)
+employ_2013 <- employ_2013 %>% select(c(`bc/std`, `2013...4`))        %>% rename(`bc-code`  = `bc/std`)   %>% rename(employ = `2013...4`)
+employ_2017 <- employ_2017 %>% select(c(`wijk/std`, levensonderhoud)) %>% rename(`bc-code`  = `wijk/std`) %>% rename(employ = levensonderhoud)
 
 employ_2005$employ <- as.numeric(employ_2005$employ)
 employ_2009$employ <- as.numeric(employ_2009$employ)
@@ -361,9 +367,9 @@ subdata_buurt <- rename.bc(subdata_buurt, condition, "T96+T92", "Holendrecht/Rei
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Drop neighbourhoods 
-# 'M50' is not present in the voting data, 'Z99' is a false code or non-existent neighbourhood
+# 'M50' is not present in the voting data, 'Z99' and 'X99' are false codes or non-existent neighbourhood
 # 'K23' ('Zuidas') is dropped as it was newly created in 2018 from 4 constitutive parts (K59, K52, K90 and K91) which also continue to exist
-subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "Z99" & subdata_buurt$bc_code != "K23",]
+subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "Z99" & subdata_buurt$bc_code != "K23" & subdata_buurt$bc_code != "X99",]
 
 # New back-up of data
 subdata_buurt_backup2 <- subdata_buurt
@@ -390,11 +396,11 @@ subdata_buurt <- subdata_buurt %>% rename(BCcombined_2005 = BCcombined)
 
 # COMPLETE DATASET - Percentage variables ----------------------------------------------------------------
 
-# Make relative employment variable: share of employed in the working-age population (15-64)
-subdata_buurt$labourpart_2005 <- (subdata_buurt$employ_2005 / subdata_buurt$`BEVPOTBBV15-64_2005`) * 100
-subdata_buurt$labourpart_2009 <- (subdata_buurt$employ_2009 / subdata_buurt$`BEVPOTBBV15-64_2009`) * 100 
-subdata_buurt$labourpart_2013 <- (subdata_buurt$employ_2013 / subdata_buurt$`BEVPOTBBV15-64_2013`) * 100 
-subdata_buurt$labourpart_2017 <- (subdata_buurt$employ_2017 / subdata_buurt$`BEVPOTBBV15-64_2017`) * 100 
+# Make relative unemployment variable: share of WWB receivers in the working-age population (15-64)
+subdata_buurt$WWB_2005 <- (subdata_buurt$employ_2005 / subdata_buurt$`BEVPOTBBV15-64_2005`) * 100
+subdata_buurt$WWB_2009 <- (subdata_buurt$employ_2009 / subdata_buurt$`BEVPOTBBV15-64_2009`) * 100 
+subdata_buurt$WWB_2013 <- (subdata_buurt$employ_2013 / subdata_buurt$`BEVPOTBBV15-64_2013`) * 100 
+subdata_buurt$WWB_2017 <- (subdata_buurt$employ_2017 / subdata_buurt$`BEVPOTBBV15-64_2017`) * 100 
 
 # Housing variables - divide by WVOORRBAG
 # Many missings, because both WHUUR and WVOOR have many missing
@@ -555,7 +561,6 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2014         = PVD
 subdata_buurt_long <- subdata_buurt_long %>% rename(bc_combined            = BCcombined)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta      = `WHUURTSLG_t-1`)
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta             = `PVDAt-1`)
-subdata_buurt_long <- subdata_buurt_long %>% rename(labour_part            = labourpart)
 
 # Reorder columns
 # TO CHANGE!

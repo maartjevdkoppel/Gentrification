@@ -231,4 +231,18 @@ est clear
 		c.imm_otherNW c.imm_W c.age_18t26 c.age_66plus c.unempl c.edu_low ///
 	    c.edu_hi i.c
 	
-/*Eelco's regressie: regress opkomst z_imm_NW z_imm_W z_age_18t26 z_age_65plus z_edu_lo z_edu_hi z_unempl z_bureauspp z_leisurepp
+/*Eelco's regressie: regress opkomst z_imm_NW z_imm_W z_age_18t26 z_age_65plus z_edu_lo z_edu_hi z_unempl z_bureauspp z_leisurepp*/
+
+
+** NEW TRY **
+
+reg PVDA i.c
+testparm i.c
+
+reg PVDA i.year
+testparm i.year
+
+
+
+
+
