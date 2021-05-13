@@ -204,7 +204,7 @@ independentvars <- c("gebiedcode15", "gebiednaam", "jaar", "BEVTOTAAL", "BEVSUR"
                      "BEVOPLHOOG_P", "BEV15_19", "BEV20_24", "BEV25_29",
                      "BEV30_34", "BEV35_39", "BEV40_44", "BEV45_49", 
                      "BEV50_54", "BEV55_59", "BEV60_64", "BEV65_69",
-                     "BEV70_74", "PREGWERKL", "BEVPOTBBV15_65", "BEVPOTBBV15_64", "WHUURTSLG_P")
+                     "BEV70_74", "PREGWERKL", "BEVPOTBBV15_65", "BEVPOTBBV15_64", "WHUURTSLG_P", "WCORHUUR")
 buurtdata <- buurtdata[independentvars]
 # NOTE: Unemployment information is unavailable for 2005 and 2009 (from 2010 onwards).
 # NOTE: Education information is unavailable for 2006.
@@ -403,8 +403,7 @@ subdata_buurt$WWB_2013 <- (subdata_buurt$employ_2013 / subdata_buurt$`BEVPOTBBV1
 subdata_buurt$WWB_2017 <- (subdata_buurt$employ_2017 / subdata_buurt$`BEVPOTBBV15-64_2017`) * 100 
 
 # Housing variables - divide by WVOORRBAG
-# Many missings, because both WHUUR and WVOOR have many missing
-house_vars      <- startsWith(names(subdata_buurt), "WHUUR")
+house_vars <- startsWith(names(subdata_buurt), "WHUUR") | startsWith(names(subdata_buurt), "WCOR")
 house_vars_2005 <- house_vars & endsWith(names(subdata_buurt), "2005")
 house_vars_2009 <- house_vars & endsWith(names(subdata_buurt), "2009")
 house_vars_2013 <- house_vars & endsWith(names(subdata_buurt), "2013")
@@ -481,6 +480,11 @@ subdata_buurt$WHUURTSLGdelta2013_2017 <- subdata_buurt$WHUURTSLG_2017 - subdata_
 subdata_buurt$`WHUURTSLG_t-1_2009` <- subdata_buurt$WHUURTSLG_2009 - subdata_buurt$WHUURTSLG_2005 # all differences with t-1
 subdata_buurt$`WHUURTSLG_t-1_2013` <- subdata_buurt$WHUURTSLG_2013 - subdata_buurt$WHUURTSLG_2009
 subdata_buurt$`WHUURTSLG_t-1_2017` <- subdata_buurt$WHUURTSLG_2017 - subdata_buurt$WHUURTSLG_2013
+
+# Variables for changes in public housing
+subdata_buurt$`WCORHUURt-1_2009` <- subdata_buurt$WCORHUUR_2009 - subdata_buurt$WCORHUUR_2005 # all differences with t-1
+subdata_buurt$`WCORHUURt-1_2013` <- subdata_buurt$WCORHUUR_2013 - subdata_buurt$WCORHUUR_2009
+subdata_buurt$`WCORHUURt-1_2017` <- subdata_buurt$WCORHUUR_2017 - subdata_buurt$WCORHUUR_2013
 
 # Variables for changes in party support
 subdata_buurt$PVDAdelta2006_2010 <- subdata_buurt$PVDA_2010 - subdata_buurt$PVDA_2006 # all differences with 2006
@@ -561,6 +565,7 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2014         = PVD
 subdata_buurt_long <- subdata_buurt_long %>% rename(bc_combined            = BCcombined)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta      = `WHUURTSLG_t-1`)
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta             = `PVDAt-1`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_pub_delta     = `WCORHUURt-1`)
 
 # Reorder columns
 # TO CHANGE!
