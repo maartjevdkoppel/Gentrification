@@ -58,6 +58,7 @@
 	lab var housing_soc_delta2009 "∆ % Social housing since 2006"
 	lab var housing_soc_delta2013 "∆ % Social housing since 2013"
 	lab var housing_soc_delta "Decline in social housing"
+	lab var housing_pub_delta "Decline in social housing"
 	lab var PVDA_delta2006 "∆ % PvdA vote since 2005"
 	lab var PVDA_delta2010 "∆ % PvdA vote since 2006"
 	lab var PVDA_delta2014 "∆ % PvdA vote since 2013"
@@ -198,8 +199,45 @@
            addnotes("Note. Data from OIS Amsterdam, own adaption") replace
 		   
 ********************************************************************************
-* GENTRIFICATION 2: ∆ % corporation-owned housing *
+* GENTRIFICATION 2: ∆ % corporation-owned housing (2018 only) *
 ********************************************************************************
 
 // Restore data from before first analysis 
 	use "$posted/data_sub_merged_long_panel", clear
+	
+// Remove missings on main predictor
+	keep if !missing(housing_pub_delta)
+	
+* Predict support for the PvdA *
+
+// Model 1: gentrification
+	reg PVDA housing_pub_delta
+	eststo PVDA_P_M1
+		   
+// Model 2A: add control variables + education
+	reg PVDA housing_pub_delta imm_Sur imm_Ant imm_Tur ///
+	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB edu_low edu_high 
+	eststo PVDA_P_M2
+	
+// Export regression table: Model 1B and 2
+	esttab PVDA_P_M1 PVDA_P_M2 using "$tables/Gentrification-2-PvdA.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+		   
+* Predict support for multicultural parties *
+
+// Model 1: gentrification
+	reg MCparties housing_pub_delta
+	eststo MC_P_M1
+		   
+// Model 2A: add control variables + education
+	reg MCparties housing_pub_delta imm_Sur imm_Ant imm_Tur ///
+	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB edu_low edu_high 
+	eststo MC_P_M2
+	
+// Export regression table: Model 1B and 2
+	esttab MC_P_M1 MC_P_M2 using "$tables/Gentrification-2-PvdA.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+
+	
