@@ -193,15 +193,20 @@ est clear
 	// Model with ∆ variables for both PvdA & social housing
 	reg PVDA_delta housing_soc_delta fe
 	
-	// Model with housing_soc & multicultural parties vote (individually)
+	// Model with housing_soc & multicultural parties vote 
 	reg PVDA housing_soc MCparties fe
 * NOTE: with addition of MC parties var, the effect of social housing virtually disappears
 	
 	// Ful model with controls 
-	reg c.PVDA c.housing_soc c.MCparties c.imm_Sur c.imm_Ant c.imm_Tur c.imm_Mar ///
+	reg c.PVDA c.housing_soc c.imm_Sur c.imm_Ant c.imm_Tur c.imm_Mar ///
 		c.imm_otherNW c.imm_W c.age_18t26 c.age_66plus c.unempl c.edu_low ///
 		c.edu_hi fe
 * NOTE: significance and effect of social housing returns
+
+	// Ful model with controls, ∆ soc housing
+	reg c.PVDA c.housing_soc_delta c.imm_Sur c.imm_Ant c.imm_Tur c.imm_Mar ///
+		c.imm_otherNW c.imm_W c.age_18t26 c.age_66plus c.unempl c.edu_low ///
+		c.edu_hi fe
 		
 * Using dummy variables
 	// Model with dummies only 
@@ -218,11 +223,11 @@ est clear
 	// Model with ∆ variables for both PvdA & social housing
 	reg c.PVDA_delta c.housing_soc_delta i.c
 
-	// Model with housing_soc & multicultural parties vote (individually)
+	// Model with housing_soc & multicultural parties vote
 	reg c.PVDA c.housing_soc c.MCparties i.c
 	
 	// Full model with controls
-	reg c.PVDA c.housing_soc c.MCparties c.imm_Sur c.imm_Ant c.imm_Tur c.imm_Mar ///
+	reg c.PVDA c.housing_soc c.imm_Sur c.imm_Ant c.imm_Tur c.imm_Mar ///
 		c.imm_otherNW c.imm_W c.age_18t26 c.age_66plus c.unempl c.edu_low ///
 	    c.edu_hi i.c
 	
