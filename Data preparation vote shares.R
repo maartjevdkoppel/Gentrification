@@ -140,6 +140,11 @@ employ_2009 <- employ_2009 %>% select(c(`bc/std`, `werkz. pers....8`)) %>% renam
 employ_2013 <- employ_2013 %>% select(c(`bc/std`, `2013`            )) %>% rename(`bc-code` = `bc/std`  ) %>% rename(employ = `2013`)
 employ_2017 <- employ_2017 %>% select(c(`wijk/std`, `2017`          )) %>% rename(`bc-code` = `wijk/std`) %>% rename(employ = `2017`)
 
+employ_2005$employ <- as.numeric(employ_2005$employ)
+employ_2009$employ <- as.numeric(employ_2009$employ)
+employ_2013$employ <- as.numeric(employ_2013$employ)
+employ_2017$employ <- as.numeric(employ_2017$employ)
+
 # Add 2015 BC codes to 2005 and 2009 employment data
 # Retrieve 2015 codes from transition document: [add source]
 bc_overgang <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2015_overgang 2005 2010 2015.xlsx", sheet = 2, col_names = TRUE )
@@ -188,12 +193,12 @@ buurtdata <- buurtdata %>% filter(buurtdata$niveaunaam == "Wijken")
 # Select relevant variables - drop all others
 independentvars <- c("gebiedcode15", "gebiednaam", "jaar", "BEVTOTAAL", "BEVSUR", "BEVANTIL", 
                      "BEVTURK", "BEVMAROK", "BEVOVNW", "BEVWEST", 
-                     "BEVAUTOCH","BEVPOTBBV15_64", "BEV0_18", "BEV18_26", "BEV27_65", 
+                     "BEVAUTOCH", "BEV0_18", "BEV18_26", "BEV27_65", 
                      "BEV66PLUS", "BEVOPLLAAG_P", "BEVOPLMID_P", 
                      "BEVOPLHOOG_P", "BEV15_19", "BEV20_24", "BEV25_29",
                      "BEV30_34", "BEV35_39", "BEV40_44", "BEV45_49", 
                      "BEV50_54", "BEV55_59", "BEV60_64", "BEV65_69",
-                     "BEV70_74", "PREGWERKL", "BEVPOTBBV15_65", "WHUURTSLG_P")
+                     "BEV70_74", "PREGWERKL", "BEVPOTBBV15_65", "BEVPOTBBV15_64", "WHUURTSLG_P")
 buurtdata <- buurtdata[independentvars]
 # NOTE: Unemployment information is unavailable for 2005 and 2009 (from 2010 onwards).
 # NOTE: Education information is unavailable for 2006.
@@ -361,8 +366,8 @@ subdata_buurt <- rename.bc(subdata_buurt, condition, "T96+T92", "Holendrecht/Rei
 subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "Z99" & subdata_buurt$bc_code != "K23",]
 
 # New back-up of data
-subdata_buurt_backup <- subdata_buurt
-subdata_buurt <- subdata_buurt_backup
+subdata_buurt_backup2 <- subdata_buurt
+subdata_buurt <- subdata_buurt_backup2
 
 # Aggregate all neighbourhoods to be merged 
 # Aggregate function cannot deal with NA -- use 999999 as placeholder for 0 to retain NAs in merged data
@@ -384,6 +389,12 @@ subdata_buurt$BCcombined_2017 <- subdata_buurt$BCcombined
 subdata_buurt <- subdata_buurt %>% rename(BCcombined_2005 = BCcombined)
 
 # COMPLETE DATASET - Percentage variables ----------------------------------------------------------------
+
+# Make relative employment variable: share of employed in the working-age population (15-64)
+subdata_buurt$labourpart_2005 <- (subdata_buurt$employ_2005 / subdata_buurt$`BEVPOTBBV15-64_2005`) * 100
+subdata_buurt$labourpart_2009 <- (subdata_buurt$employ_2009 / subdata_buurt$`BEVPOTBBV15-64_2009`) * 100 
+subdata_buurt$labourpart_2013 <- (subdata_buurt$employ_2013 / subdata_buurt$`BEVPOTBBV15-64_2013`) * 100 
+subdata_buurt$labourpart_2017 <- (subdata_buurt$employ_2017 / subdata_buurt$`BEVPOTBBV15-64_2017`) * 100 
 
 # Housing variables - divide by WVOORRBAG
 # Many missings, because both WHUUR and WVOOR have many missing
@@ -544,6 +555,7 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2014         = PVD
 subdata_buurt_long <- subdata_buurt_long %>% rename(bc_combined            = BCcombined)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta      = `WHUURTSLG_t-1`)
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta             = `PVDAt-1`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(labour_part            = labourpart)
 
 # Reorder columns
 # TO CHANGE!
