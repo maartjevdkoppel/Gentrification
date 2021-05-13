@@ -1,3 +1,6 @@
+# PAPER POLITICOLOGENETMAAL: PvdA & gentrification
+# Last update: 08/05/21
+
 # Set-up ---------------------------------------------------------------------------------------
 rm(list=ls())
 
@@ -120,6 +123,37 @@ buurtdata <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken
 housingdata_0509 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvoorraad 1995-2014.csv", col_names = TRUE)
 housingdata_1317 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvoorraad 2011-2021.csv", col_names = TRUE)
 
+# Read data for employment variable
+# Data retrieved from OIS Amsterdam
+employ_2005 <- read_xls( "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2005_werkzame personen.xls",  skip = 4, col_names = TRUE)
+employ_2009 <- read_xls( "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2009_werkzame personen.xls",  skip = 4, col_names = TRUE)
+employ_2013 <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2013_werkzame personen.xlsx", skip = 2, col_names = TRUE)
+employ_2017 <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Laure/2017_werkzame personen.xlsx", skip = 2, col_names = TRUE)
+
+employ_2005 <- employ_2005 %>% dplyr::filter(str_length(`bc/std`)   == 3 & `bc/std`   != "ASD")
+employ_2009 <- employ_2009 %>% dplyr::filter(str_length(`bc/std`)   == 3 & `bc/std`   != "ASD")
+employ_2013 <- employ_2013 %>% dplyr::filter(str_length(`bc/std`)   == 3 & `bc/std`   != "ASD")
+employ_2017 <- employ_2017 %>% dplyr::filter(str_length(`wijk/std`) == 3 & `wijk/std` != "ASD")
+
+employ_2005 <- employ_2005 %>% select(c(`bc/std`, `werk. pers....8` )) %>% rename(`brtk2005` = `bc/std`  ) %>% rename(employ = `werk. pers....8`)
+employ_2009 <- employ_2009 %>% select(c(`bc/std`, `werkz. pers....8`)) %>% rename(`brtk2005` = `bc/std`  ) %>% rename(employ = `werkz. pers....8`)
+employ_2013 <- employ_2013 %>% select(c(`bc/std`, `2013`            )) %>% rename(`bc-code` = `bc/std`  ) %>% rename(employ = `2013`)
+employ_2017 <- employ_2017 %>% select(c(`wijk/std`, `2017`          )) %>% rename(`bc-code` = `wijk/std`) %>% rename(employ = `2017`)
+
+# Add 2015 BC codes to 2005 and 2009 employment data
+# Retrieve 2015 codes from transition document: [add source]
+bc_overgang <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2015_overgang 2005 2010 2015.xlsx", sheet = 2, col_names = TRUE )
+bc_overgang <- bc_overgang  %>% select(c(brtk2005, brtk2015)) 
+
+employ_2005 <- merge(employ_2005, bc_overgang, by="brtk2005", x.all=TRUE) # Add 2015 codes to employment data
+employ_2009 <- merge(employ_2009, bc_overgang, by="brtk2005", x.all=TRUE)
+
+employ_2005 <- employ_2005 %>% rename(`bc-code` = `brtk2015`) # Rename BC code variable for later merging
+employ_2009 <- employ_2009 %>% rename(`bc-code` = `brtk2015`)
+
+employ_2005 <- employ_2005 %>% select(c(`bc-code`, employ)) # Drop 2005 BC code, is now redundant
+employ_2009 <- employ_2009 %>% select(c(`bc-code`, employ))
+
 # NEIGHBOURHOOD DATA - Preparing data ---------------------------------------------------------------------------
 
 # HOUSINGDATA
@@ -154,7 +188,7 @@ buurtdata <- buurtdata %>% filter(buurtdata$niveaunaam == "Wijken")
 # Select relevant variables - drop all others
 independentvars <- c("gebiedcode15", "gebiednaam", "jaar", "BEVTOTAAL", "BEVSUR", "BEVANTIL", 
                      "BEVTURK", "BEVMAROK", "BEVOVNW", "BEVWEST", 
-                     "BEVAUTOCH", "BEV0_18", "BEV18_26", "BEV27_65", 
+                     "BEVAUTOCH","BEVPOTBBV15_64", "BEV0_18", "BEV18_26", "BEV27_65", 
                      "BEV66PLUS", "BEVOPLLAAG_P", "BEVOPLMID_P", 
                      "BEVOPLHOOG_P", "BEV15_19", "BEV20_24", "BEV25_29",
                      "BEV30_34", "BEV35_39", "BEV40_44", "BEV45_49", 
@@ -194,6 +228,12 @@ buurtdata2005 <- buurtdata %>% filter(buurtdata$jaar == 2005)
 buurtdata2009 <- buurtdata %>% filter(buurtdata$jaar == 2009)
 buurtdata2013 <- buurtdata %>% filter(buurtdata$jaar == 2013)
 buurtdata2017 <- buurtdata %>% filter(buurtdata$jaar == 2017)
+
+# Add employment data to buurtdata
+buurtdata2005 <- merge(buurtdata2005, employ_2005, by="bc-code", all=TRUE)
+buurtdata2009 <- merge(buurtdata2009, employ_2009, by="bc-code", all=TRUE)
+buurtdata2013 <- merge(buurtdata2013, employ_2013, by="bc-code", all=TRUE)
+buurtdata2017 <- merge(buurtdata2017, employ_2017, by="bc-code", all=TRUE)
 
 # Add years to variable names
 names(buurtdata2005) <- paste0(names(buurtdata2005), "_2005")
@@ -508,7 +548,7 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta             = `PV
 # Reorder columns
 # TO CHANGE!
 #subdata_buurt_long <- subdata_buurt_long[,c(1:3,33,4:7,25,29:33,8:23,26:28,24)] # Change if adding more variables to dataset!
-subdata_buurt_long <- subdata_buurt_long[,c(1:3,34,4:7,25,30:33,8:23,26:29,24)] 
+#subdata_buurt_long <- subdata_buurt_long[,c(1:3,34,4:7,25,30:33,8:23,26:29,24)] 
   
 # Export long data
 write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.csv", row.names = FALSE)
