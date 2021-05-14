@@ -236,11 +236,24 @@ est clear
 
 ** NEW TRY **
 
+// Test for need for neighbourhood dummies
 reg PVDA i.c
 testparm i.c
 
+// Test for need for year dummies
 reg PVDA i.year
 testparm i.year
+
+// Set data as panel data
+xtset c year, delta(4)
+
+// Create lagged dependent variables
+gen laggedPVDA      = l.PVDA
+gen laggedMCparties = l.MCparties
+
+
+
+
 
 
 

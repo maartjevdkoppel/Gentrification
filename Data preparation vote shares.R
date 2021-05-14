@@ -103,8 +103,8 @@ data <- merge(data,     data2018, by="bc_naam", all=TRUE)
 data <- data[,c(1,2,17,40,72,3:16,18:39,41:71,73:105)]
 
 # Subset to PvdA & multicultural parties only
-subdata <- data[,c(1:5,8,9,22,23,45,72,74,79,66,86,97)]
-subdata <- subdata[,c(1:5,7,9,10,13:16,6,8,11,12)] # reorder columns in subdata
+subdata <- data[,c(1:5,6,8,9,20,22,23,42,45,72:74,79,66,86,97)]
+#subdata <- subdata[,c(1:5,7,9,10,13:16,6,8,11,12)] # reorder columns in subdata, CHANGE FOR EXTRA VARS!
 
 # Export data to CSV (full & subset)
 write.csv(data,   "/Users/Maartje/Desktop/LJA/data_allepartijen.csv", row.names = FALSE)
@@ -467,6 +467,12 @@ subdata_buurt$BIJ1_2018 <- (subdata_buurt$BIJ1_2018 / subdata_buurt$totaal_2018)
 subdata_buurt$MCparties_2014 <- subdata_buurt$MPP_2014                             # For 2014: only the vote share of M+
 subdata_buurt$MCparties_2018 <- subdata_buurt$DENK_2018 + subdata_buurt$BIJ1_2018  # For 2018: add vote shares of DENK and BIJ1
   
+# Variables for turnout
+subdata_buurt$turnout_2006 <- (subdata_buurt$totaal_2006 / subdata_buurt$kies.gerechtigden_2006) * 100
+subdata_buurt$turnout_2010 <- (subdata_buurt$totaal_2010 / subdata_buurt$kiesge.rechtigden_2010) * 100
+subdata_buurt$turnout_2014 <- (subdata_buurt$totaal_2014 / subdata_buurt$kg_2014)                * 100
+subdata_buurt$turnout_2018 <- (subdata_buurt$totaal_2018 / subdata_buurt$opgeroepenen_2018)      * 100
+
 # Variables for changes in social housing
 subdata_buurt$WHUURTSLGdelta2005_2009 <- subdata_buurt$WHUURTSLG_2009 - subdata_buurt$WHUURTSLG_2005 # all differences with 2005
 subdata_buurt$WHUURTSLGdelta2005_2013 <- subdata_buurt$WHUURTSLG_2013 - subdata_buurt$WHUURTSLG_2005
@@ -510,7 +516,7 @@ names(subdata_buurt) <- str_replace(names(subdata_buurt), "2017", "2018")
 
 # Reshape all year-dependent variables to long structure 
 subdata_buurt_longest <- subdata_buurt %>% pivot_longer(
-  cols = PVDA_2006:`PVDAt-1_2018`, # Change if adding more variables to dataset!
+  cols = kies.gerechtigden_2006:`PVDAt-1_2018`, # Change if adding more variables to dataset!
   names_to = c("kolomnaam", "jaar"), 
   names_pattern = "(.*)_(.*)",
   values_to = "waarde"
@@ -534,7 +540,8 @@ subdata_buurt_long = subset(subdata_buurt_long, select = -c(totaal, BEVTOTAAL, `
                                                             `BEV40-44`, `BEV45-49`, `BEV50-54`, 
                                                             `BEV55-59`, `BEV60-64`, `BEV65-69`, 
                                                             `BEV70-74`, `BEVPOTBBV15-65`, `BEV15-74`, 
-                                                            WVOORRBAG))
+                                                            WVOORRBAG, kg, kiesge.rechtigden, opgeroepenen,
+                                                            kies.gerechtigden))
 
 # Rename variables 
 subdata_buurt_long <- subdata_buurt_long %>% rename(bc_name                = bc_naam)
