@@ -16,8 +16,6 @@
 	cap log close
 	set scheme plotplain
 
-* Set paths *
-
 	global dir "/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Analyses"
 
 	global data 	"$dir/data"
@@ -63,44 +61,41 @@
 	lab var PVDA_delta2014 "∆ % PvdA vote since 2013"
 	lab var PVDA_delta "∆ % PvdA vote since previous election"
 	lab var WWB "% Recipients unemployment benefits"
-	
-*TO DO: add new variables
+	lab var turnout "Turnout"
 
 // Encode neighbourhood variable
 	encode bc_code, gen(c)
 
+// Change housing_pub_delta from string to numeric
+	gen housing_pub_delta1 = real(housing_pub_delta)
+	drop housing_pub_delta
+	rename housing_pub_delta1 housing_pub_delta
+	lab var housing_pub_delta "Decline in public housing"	
+	
+* Check whether manually combined neighbourhoods are significantly different *
 
+ttest PVDA,              by(bc_combined)
+ttest MCparties,         by(bc_combined)
+ttest turnout,           by(bc_combined)
+ttest housing_soc_delta, by(bc_combined)
+ttest housing_pub_delta, by(bc_combined) // significant difference
+ttest imm_Sur,           by(bc_combined)
+ttest imm_Ant,           by(bc_combined)
+ttest imm_Tur,           by(bc_combined) // significant difference
+ttest imm_Mar,           by(bc_combined) // significant difference
+ttest imm_otherNW,       by(bc_combined)
+ttest imm_W,             by(bc_combined) // significant difference
+ttest imm_Ant,           by(bc_combined)
+ttest age_18t26,         by(bc_combined)
+ttest age_66plus,        by(bc_combined)
+ttest WWB,               by(bc_combined) // significant difference
+ttest edu_low,           by(bc_combined)
+ttest edu_high,          by(bc_combined)
+
+	
 ********************************************************************************
-* EXPLORE THE VARIABLES *
+* Explore the need for multilevel modelling **
 ********************************************************************************
-
-* Explore the need for multilevel modelling *
-
-// Plot between-neighbourhood variation
-	sum PVDA 
-	gen o_mean = r(mean)
-		lab var o_mean "Overall mean"
-
-	gen c_mean = .
-		lab var c_mean "Neighbourhood mean"
-	forvalues x = 1/84 {								
-		sum PVDA if c == `x'
-		replace c_mean = r(mean) if c == `x'
-	}
-
-	egen pickone = tag(c)
-	sort c_mean
-	gen c_mean_rank = sum(pickone)
-	twoway 				   				   			 ///
-		(scatter c_mean c_mean_rank, 				 ///
-			ytitle("PVDA vote share") ///
-			ylab(10(5)50, angle(0)) 						 ///
-			yscale(range(10 50)) ///
-			xlab("") 								 ///
-			mlab(c) mlabpos(12)) 					 ///
-		(line o_mean c) 							 ///
-			if pickone == 1
-	drop pickone
 
 // Test for model improvement with random intercepts 
 	xtmixed c.PVDA, mle var
@@ -113,13 +108,48 @@
 	lrtest A B // test for model improvement: no significant improvement
 	est clear
 	
-// Perform a Wald test for the addition of dummies 
+	
+	xtmixed c.turnout, mle var
+	eststo C
 
+	xtmixed c.turnout || c:, mle var
+	eststo D
+	xtmrho // calculate the VPC: 0.70084
+
+	lrtest C D // test for model improvement: significant improvement
+	est clear
+	
+	
+	xtmixed c.MCparties, mle var
+	eststo E
+
+	xtmixed c.MCparties || c:, mle var
+	eststo F
+	xtmrho // calculate the VPC: 0.10934
+
+	lrtest E F // test for model improvement: no significant improvement
+	est clear
+
+	
+// Perform Wald tests for the addition of dummies 
 	reg PVDA i.c
 	testparm i.c // test for neighbourhood dummies: non-significant
 
 	reg PVDA i.year
 	testparm i.year // test for year dummies: significant
+	
+	reg turnout i.c
+	testparm i.c // test for neighbourhood dummies: significant
+	
+	reg turnout i.year
+	testparm i.year // test for year dummies: non-significant
+	
+	reg MCparties i.c
+	testparm i.c // test for neighbourhood dummies: non-significant
+	
+	reg MCparties i.year
+	testparm i.year // test for year dummies: significant
+	
 	
 ********************************************************************************
 * Prepare panel data *
@@ -134,9 +164,11 @@
 // Create lagged dependent variables
 	gen laggedPVDA      = l.PVDA
 	gen laggedMCparties = l.MCparties
+	gen laggedTURN      = l.turnout
 	
 	lab var laggedPVDA      "% PvdA vote at previous election"
 	lab var laggedMCparties "% Multicultural parties vote at previous election"
+	lab var laggedTURN      "Turnout at previous election"
 
 // Save panel data
 	save "$posted/data_sub_merged_long_panel", replace
@@ -148,27 +180,27 @@
 // Remove missings on main predictor
 	keep if !missing(housing_soc_delta)
 	
-* Predict support for the PvdA: OLS with time dummies and LDV *
+* Predict support for the PvdA: OLS with time dummies (2010-2018) *
 
 // Model 1: gentrification
 	reg PVDA housing_soc_delta
 	eststo PVDA_M1
 	
 // Model 1A: add lagged dependent variable
-	reg PVDA housing_soc_delta laggedPVDA
-	eststo PVDA_M1A
-
+	*reg PVDA housing_soc_delta laggedPVDA
+	*eststo PVDA_M1A
+	
 // Model 1B: add time dummies
-	reg PVDA housing_soc_delta laggedPVDA i.election
+	reg PVDA housing_soc_delta i.election
 	eststo PVDA_M1B
 				   
 // Model 2: add control variables 
-	reg PVDA housing_soc_delta laggedPVDA i.election imm_Sur imm_Ant imm_Tur ///
+	reg PVDA housing_soc_delta i.election imm_Sur imm_Ant imm_Tur ///
 	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB
 	eststo PVDA_M2
 		   
 // Model 2A: add control variables + education
-	reg PVDA housing_soc_delta laggedPVDA i.election imm_Sur imm_Ant imm_Tur ///
+	reg PVDA housing_soc_delta i.election imm_Sur imm_Ant imm_Tur ///
 	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB edu_low edu_high 
 	eststo PVDA_M2A
 	
@@ -177,18 +209,63 @@
 	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
            addnotes("Note. Data from OIS Amsterdam, own adaption") replace
 	
-* Predict support for multicultural parties: 2018 only *
+	
+* Predict voter turnout: OLS with neighbourhood fixed effects (2010-2018) * 
+
+// Generate neighbourhood fixed effects with de-meaning
+	sum turnout  // calculate overall mean and neighbourhood means
+	gen o_mean = r(mean)
+		lab var o_mean "Overall mean"
+
+	gen c_mean = .
+		lab var c_mean "Neighbourhood mean"
+	forvalues x = 1/84 {								
+		sum turnout if c == `x'
+		replace c_mean = r(mean) if c == `x'
+	}
+
+	gen fe = c_mean - o_mean // create fixed effects variable
+
+// Model 1: gentrification
+	reg turnout housing_soc_delta
+	eststo TURN_M1
+	
+// Model 1A: add lagged dependent variable
+	*reg turnout housing_soc_delta laggedTURN
+	*eststo TURN_M1A
+
+// Model 1B: add neighbourhood fixed effects 
+	reg turnout housing_soc_delta fe
+	eststo TURN_M1B
+				   
+// Model 2: add control variables 
+	reg turnout housing_soc_delta fe imm_Sur imm_Ant imm_Tur ///
+	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB
+	eststo TURN_M2
+		   
+// Model 2A: add control variables + education
+	reg turnout housing_soc_delta fe imm_Sur imm_Ant imm_Tur ///
+	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB edu_low edu_high 
+	eststo TURN_M2A
+	
+// Export regression table: Model 1B and 2
+	esttab TURN_M1B TURN_M2 using "$tables/Gentrification-1-turnout.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+
+	
+* Predict support for multicultural parties: 2014 & 2018 only, time dummies *
 
 // Model 1: gentrification (2014 & 2018)
 	reg MCparties housing_soc_delta
 	eststo MC_M1
-
-// Model 1A: add lagged dependent variable (2018 only)
-	reg MCparties housing_soc_delta laggedMCparties
+	
+// Model 1A: add time dummies  
+	reg MCparties housing_soc_delta i.election
 	eststo MC_M1A
 	
 // Model 2: add control variables (including education) (2018 only)
-	reg MCparties housing_soc_delta laggedMCparties imm_Sur imm_Ant imm_Tur ///
+	reg MCparties housing_soc_delta i.election imm_Sur imm_Ant imm_Tur ///
 	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB edu_low edu_high 
 	eststo MC_M2
 	
@@ -196,6 +273,7 @@
 	esttab MC_M1A MC_M2 using "$tables/Gentrification-1-MCparties.rtf", ///
 	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
            addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+		  
 		   
 ********************************************************************************
 * GENTRIFICATION 2: ∆ % corporation-owned housing (2018 only) *
@@ -206,6 +284,7 @@
 	
 // Remove missings on main predictor
 	keep if !missing(housing_pub_delta)
+	
 	
 * Predict support for the PvdA *
 
@@ -222,7 +301,25 @@
 	esttab PVDA_P_M1 PVDA_P_M2 using "$tables/Gentrification-2-PvdA.rtf", ///
 	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
            addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+
 		   
+* Predict turnout *
+
+// Model 1: gentrification
+	reg turnout housing_pub_delta
+	eststo TURN_P_M1
+		   
+// Model 2A: add control variables (including education)
+	reg turnout housing_pub_delta imm_Sur imm_Ant imm_Tur ///
+	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB edu_low edu_high 
+	eststo TURN_P_M2
+	
+// Export regression table: Model 1B and 2
+	esttab TURN_P_M1 TURN_P_M2 using "$tables/Gentrification-2-turnout.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+	
+	
 * Predict support for multicultural parties *
 
 // Model 1: gentrification
@@ -241,10 +338,8 @@
 		   
 	   		   
 ********************************************************************************
-* PREDICTING TURNOUT *
+/* EELCO'S DATA - NO LONGER NEEDED *
 ********************************************************************************
-
-* Prepare data - data and do-file from Eelco * 
 
 // Compile data: PS2019
 	cd "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Eelco"
@@ -279,11 +374,6 @@
 	gen opkomst = (geldigestembiljetten/opgeroepenen)*100
 
 	
-// Add gentrification variables (alleen op wijkniveau beschikbaar)
-
-	
-	
-
 * Combine and recode data* 
 
 // Leisure organizations
@@ -332,7 +422,6 @@
 	lab var bureauspp "Aantal stembureaus (p.p.)"
 	lab var leisurepp "Vrijetijdsorganisaties (p.p.)"
 
-	cd  "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Eelco"
+	cd  "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Eelco" */
 
-* Add gentrification variables to data 
 	
