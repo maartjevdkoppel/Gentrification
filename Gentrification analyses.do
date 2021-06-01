@@ -74,24 +74,28 @@
 	
 * Check whether manually combined neighbourhoods are significantly different *
 
-ttest PVDA,              by(bc_combined)
-ttest MCparties,         by(bc_combined)
-ttest turnout,           by(bc_combined)
-ttest housing_soc_delta, by(bc_combined)
-ttest housing_pub_delta, by(bc_combined) // significant difference
-ttest imm_Sur,           by(bc_combined)
-ttest imm_Ant,           by(bc_combined)
-ttest imm_Tur,           by(bc_combined) // significant difference
-ttest imm_Mar,           by(bc_combined) // significant difference
-ttest imm_otherNW,       by(bc_combined)
-ttest imm_W,             by(bc_combined) // significant difference
-ttest imm_Ant,           by(bc_combined)
-ttest age_18t26,         by(bc_combined)
-ttest age_66plus,        by(bc_combined)
-ttest WWB,               by(bc_combined) // significant difference
-ttest edu_low,           by(bc_combined)
-ttest edu_high,          by(bc_combined)
+	ttest PVDA,              by(bc_combined)
+	ttest MCparties,         by(bc_combined)
+	ttest turnout,           by(bc_combined)
+	ttest housing_soc_delta, by(bc_combined)
+	ttest housing_pub_delta, by(bc_combined) // significant difference
+	ttest imm_Sur,           by(bc_combined)
+	ttest imm_Ant,           by(bc_combined)
+	ttest imm_Tur,           by(bc_combined) // significant difference
+	ttest imm_Mar,           by(bc_combined) // significant difference
+	ttest imm_otherNW,       by(bc_combined)
+	ttest imm_W,             by(bc_combined) // significant difference
+	ttest imm_Ant,           by(bc_combined)
+	ttest age_18t26,         by(bc_combined)
+	ttest age_66plus,        by(bc_combined)
+	ttest WWB,               by(bc_combined) // significant difference
+	ttest edu_low,           by(bc_combined)
+	ttest edu_high,          by(bc_combined)
 
+* Check for multicollinearity gentrification variables *
+
+	correlate housing_soc_delta housing_pub_delta
+	
 	
 ********************************************************************************
 * Explore the need for multilevel modelling **
@@ -173,6 +177,7 @@ ttest edu_high,          by(bc_combined)
 // Save panel data
 	save "$posted/data_sub_merged_long_panel", replace
 
+	
 ********************************************************************************
 * GENTRIFICATION 1: ∆ % social housing *
 ********************************************************************************
@@ -273,6 +278,25 @@ ttest edu_high,          by(bc_combined)
 	esttab MC_M1A MC_M2 using "$tables/Gentrification-1-MCparties.rtf", ///
 	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
            addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+		   
+* Predict support for multicultural parties: 2018 only *
+
+// Only consider multicultural party support for 2018: DENK & BIJ1
+	gen MCparties18 = MCparties if election == 2018
+
+// Model 1: gentrification (2014 & 2018)
+	reg MCparties18 housing_soc_delta
+	eststo MC_M1_18
+
+// Model 2: add control variables (including education) (2018 only)
+	reg MCparties18 housing_soc_delta imm_Sur imm_Ant imm_Tur ///
+	    imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB edu_low edu_high 
+	eststo MC_M2_18
+	
+// Export regression table: Model 1A and 2
+	esttab MC_M1_18 MC_M2_18 using "$tables/Gentrification-1-MCparties18.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace
 		  
 		   
 ********************************************************************************
@@ -335,93 +359,58 @@ ttest edu_high,          by(bc_combined)
 	esttab MC_P_M1 MC_P_M2 using "$tables/Gentrification-2-MC.rtf", ///
 	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
            addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+		      
+		   
+********************************************************************************
+* BOTH GENTRIFICATION INDICATORS + CHANGE IN PVDA SUPPORT					   *
+********************************************************************************
+
+// Change delta variables from string to numeric
+	gen PVDA_delta2014_1 = real(PVDA_delta2014)
+	drop PVDA_delta2014
+	rename PVDA_delta2014_1 PVDA_delta2014
+	
+	gen PVDA_delta2010_1 = real(PVDA_delta2010)
+	drop PVDA_delta2010
+	rename PVDA_delta2010_1 PVDA_delta2010
+	
+* Predict change in support for PvdA (2014-2018) *
+
+// Model 1: gentrification variables
+	reg PVDA_delta2014 housing_pub_delta housing_soc_delta
+	eststo PVDA_change_M1
+	
+// Model 2: add control variables (including education)	
+	reg PVDA_delta2014 housing_pub_delta housing_soc_delta imm_Sur imm_Ant ///
+	    imm_Tur imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB edu_low ///
+		edu_high 
+	eststo PVDA_change_M2
+
+// Export regression table
+	esttab PVDA_change_M1 PVDA_change_M2 using "$tables/PvdAchange2014-2018.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+
+* Predict change in support for PvdA (2010-2018) *
+	
+// Change ∆2010 to 2010-2018 only 
+	gen PVDA_delta20102018 = PVDA_delta2010 if election == 2018
+	
+// Model 1: gentrification variables
+	reg PVDA_delta20102018 housing_pub_delta housing_soc_delta
+	eststo PVDA_change_M3
+	
+// Model 2: add control variables (including education)	
+	reg PVDA_delta20102018 housing_pub_delta housing_soc_delta imm_Sur  ///
+	    imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB  ///
+		edu_low edu_high
+	eststo PVDA_change_M4
+	
+// Export regression table
+	esttab PVDA_change_M3 PVDA_change_M4 using "$tables/PvdAchange2010-2018.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace
 		   
 	   		   
-********************************************************************************
-/* EELCO'S DATA - NO LONGER NEEDED *
-********************************************************************************
-
-// Compile data: PS2019
-	cd "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Eelco"
-	use "uitslagen Kiesraad.dta", clear
-	keep if Regio=="Amsterdam"
-	gen postcode4 = substr(postcode, 1, 4)
-	gen postcode2 = substr(postcode, 6, 2)
-	gen postcode6 = postcode4 + postcode2
-	rename postcode postcode_old
-	rename postcode6 postcode
-	merge m:1 postcode using "koppeltabel postcode naar buurt.dta"
-	drop if Regio==""
-	merge m:1 buurt_vollcode using "buurtkenmerken Amsterdam.dta", gen(merge_kenm)
-	merge m:1 buurt_vollcode using "buurtkenmerken Amsterdam - 2016.dta", gen(merge16)
-	capture drop Pregwerkl_p
-	merge m:1 buurt_vollcode using "buurtkenmerken Amsterdam - 2017.dta", gen(merge17)
-	drop if Regio==""
-
-	gen opkomst = (geldigestemmen/kiesgerechtigden)*100
-
-
-// Compile data: GM2018
-	cd "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Eelco"
-	use "uitslagen GM2018.dta", clear
-	merge m:1 postcode using "koppeltabel postcode naar buurt.dta"
-	merge m:1 buurt_vollcode using "buurtkenmerken Amsterdam.dta", gen(merge_kenm)
-	merge m:1 buurt_vollcode using "buurtkenmerken Amsterdam - 2016.dta", gen(merge16)
-	capture drop Pregwerkl_p
-	merge m:1 buurt_vollcode using "buurtkenmerken Amsterdam - 2017.dta", gen(merge17)
-	keep if lokaal!=""
-
-	gen opkomst = (geldigestembiljetten/opgeroepenen)*100
-
-	
-* Combine and recode data* 
-
-// Leisure organizations
-	merge m:1 buurt_vollcode using "leisure.dta", gen(merge_leisure)
-	gen leisurepp = leisure/Bevtotaal
-
-// Stembureau density
-	bys buurt_vollcode: gen bureaus = _N
-	gen bureauspp = bureaus/Bevtotaal
-	recode bureauspp (2=.)
-
-// Recode data: IVs
-	rename Bevtotaal bevolking
-	rename (BevSur_p BevAntil_p BevTurk_p BevMarok_p) (imm_Sur imm_Ant imm_Tur imm_Mar)
-	rename (BevovNW_p BevWest_p BevAutoch_p) (imm_NW imm_W imm_autoch) 
-	rename (Bev0_18_p Bev18_26p Bev27_65p Bev66plus_p) (age_0t18 age_18t26 age_27t65 age_65plus)
-	rename (Bevopllaag_p-Bevoplhoog_p) (edu_lo edu_mid edu_hi)
-	rename Pregwerkl_p unempl
-
-// HHI
-	egen hhi = rowtotal(imm_Sur imm_Ant imm_Tur imm_Mar)
-
-// Standardize
-	*foreach var of varlist imm_* age_18t26 age_65plus edu_lo edu_hi unempl leisurepp bureauspp {
-		*egen z_`var' = std(`var')
-		*}
-	
-// Stadsdeel
-	encode sd, gen(stadsdeel)
-	lab define stadsdeel2 1 "Centrum" 2 "West" 3 "Nieuw-West" 4 "Zuid" 5 "Oost" 6 "Noord" 7 "Zuidoost"
-	lab values stadsdeel stadsdeel2
-
-// Labels
-	lab var imm_Sur "% Surinaams"
-	lab var imm_Ant "% Antilliaans"
-	lab var imm_Tur "% Turks"
-	lab var imm_Mar "% Marokkaans"
-	lab var imm_NW "% NW-immigr."
-	lab var imm_W "% W-immigr."
-	lab var imm_autoch "% autochtoon"
-	lab var age_18t26 "% 18 tot 26 jaar"
-	lab var age_65plus "% 65 plus"
-	lab var edu_lo "% laag opgeleid"
-	lab var edu_hi "% hoog opgeleid"
-	lab var unempl "% werkloos"
-	lab var bureauspp "Aantal stembureaus (p.p.)"
-	lab var leisurepp "Vrijetijdsorganisaties (p.p.)"
-
-	cd  "/Users/Maartje/Desktop/LJA/Data POLetmaal/Data Eelco" */
 
 	
