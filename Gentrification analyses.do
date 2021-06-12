@@ -410,7 +410,52 @@
 	esttab PVDA_change_M3 PVDA_change_M4 using "$tables/PvdAchange2010-2018.rtf", ///
 	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
            addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+
+		   ********************************************************************************
+* BOTH GENTRIFICATION INDICATORS + BIJ1, DENK SEPARATE			         	   *
+********************************************************************************
+
+// Restore data from before first analysis 
+	use "$posted/data_sub_merged_long_panel", clear
+	
+// Remove missings on main predictors
+	keep if !missing(housing_pub_delta)
+	keep if !missing(housing_soc_delta)
+	
+* Predict support for BIJ1 (2018) *
+
+// Model 1: gentrification variables
+	reg BIJ1 housing_pub_delta housing_soc_delta
+	eststo BIJ1_M1
+	
+// Model 2: add control variables (including education)	
+	reg BIJ1 housing_pub_delta housing_soc_delta imm_Sur  ///
+	    imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB  ///
+		edu_low edu_high
+	eststo BIJ1_M2
+	
+// Export regression table
+	esttab BIJ1_M1 BIJ1_M2 using "$tables/BIJ12018.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace
+
 		   
-	   		   
+* Predict support for DENK (2018) *
+		   
+
+// Model 1: gentrification variables
+	reg DENK housing_pub_delta housing_soc_delta
+	eststo DENK_M1
+	
+// Model 2: add control variables (including education)	
+	reg DENK housing_pub_delta housing_soc_delta imm_Sur  ///
+	    imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 age_66plus WWB  ///
+		edu_low edu_high
+	eststo DENK_M2
+	
+// Export regression table
+	esttab DENK_M1 DENK_M2 using "$tables/DENK2018.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace	   		   
 
 	
