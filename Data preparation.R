@@ -133,58 +133,85 @@ housingdata_1317 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvo
 # Data retrieved from OIS Amsterdam
 
 # 2005 income data
-columnnames <- names(read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2008_stadsdelen_40.xls", n_max = 0))
-columntypes <- ifelse(grepl("^[A-Z]", columnnames),"numeric", "guess")
-income2005  <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2008_stadsdelen_40.xls", skip = 9, sheet = 1, col_names = FALSE, col_types = columntypes)
-income2005  <- income2005 %>% select(c(`...1`, `...2`, `...8`)) %>% rename(`bc_code` = `...1`) %>% rename(`bc_naam` = `...2`) %>% rename(`net_std_income_household` = `...8`)
-income2005  <- income2005 %>% dplyr::filter(str_length(`bc_code`) == 3 & `bc_code` != "ASD") # Keep only neighbourhood observations
+income2005 <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2008_stadsdelen_40.xls", skip = 9, sheet = 1, col_names = FALSE, col_types = "text")
+income2005 <- income2005 %>% select(c(`...1`, `...2`, `...8`)) %>% rename(`bc_code` = `...1`) %>% rename(`bc_naam` = `...2`) %>% rename(`net_std_income_household` = `...8`)
+income2005 <- income2005 %>% dplyr::filter(str_length(`bc_code`) == 3 & `bc_code` != "ASD") # Keep only neighbourhood observations
+income2005$net_std_income_household <- gsub(",", ".", income2005$net_std_income_household) # Make sure use of commas and periods is consistent
 income2005[income2005 == "x"] <- NA # Set "x" to missing
+income2005$net_std_income_household <- as.numeric(income2005$net_std_income_household) # Set to numeric
 
 # 2009 income data
-columnnames <- names(read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2011_stadsdelen_46.xls", n_max = 0))
-columntypes <- ifelse(grepl("^[A-Z]", columnnames),"numeric", "guess")
-income2009  <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2011_stadsdelen_46.xls", skip = 9, sheet = 1, col_names = FALSE, col_types = columntypes)
+income2009  <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2011_stadsdelen_46.xls", skip = 9, sheet = 1, col_names = FALSE, col_types = "text")
 income2009$bc_code <- substr(income2009$`...1`, 1, 3)
 income2009  <- income2009[income2009$bc_code != "ASD" & !grepl(" ", income2009$bc_code) & !is.na(income2009$bc_code),] # Keep only neighbourhood observations
 income2009$bc_naam <- substring(income2009$`...1`, 5)
 income2009  <- income2009 %>% rename(`net_std_income_household` = `...7`)
+income2009$net_std_income_household <- gsub('[,]', '\\.', income2009$net_std_income_household) # Make sure use of commas and periods is consistent
 income2009[income2009 == "x"] <- NA # Set "x" to missing
 income2009 <- income2009 %>% select(c(bc_code, bc_naam, net_std_income_household))
+income2009$net_std_income_household <- as.numeric(income2009$net_std_income_household) # Set to numeric
 
 # 2013 income data
-## LET OP: hier nog een bc_naam aan koppelen?
+## LET OP: hier nog een bc_naam aan koppelen? #########
 columnnames <- names(read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2016_stadsdelen_3_21.xlsx", n_max = 0))
 columntypes <- ifelse(grepl("^[A-Z]", columnnames),"numeric", "guess")
-income2013  <- read_excel("/Users/Maartje/Desktop/LJA/Data POLetmaal/2016_stadsdelen_3_21.xlsx", skip = 8, sheet = 1, col_names = FALSE, col_types = columntypes)
+income2013  <- read_excel("/Users/Maartje/Desktop/LJA/Data POLetmaal/2016_stadsdelen_3_21.xlsx", skip = 8, sheet = 1, col_names = FALSE, col_types = "text")
 income2013$bc_code <- substr(income2013$`...1`, 1, 3)
 income2013  <- income2013 %>% dplyr::filter(str_length(`bc_code`) == 3 & `bc_code` != "ASD" & !grepl(" ", bc_code) & str_length(`...1`) == 3 ) # Keep only neighbourhood observations
 income2013  <- income2013 %>% rename(`net_std_income_household` = `...13`)
+income2013$net_std_income_household <- gsub('[,]', '\\.', income2013$net_std_income_household) # Make sure use of commas and periods is consistent
 income2013[income2013 == "x"] <- NA # Set "x" to missing
 income2013  <- income2013 %>% select(bc_code, net_std_income_household)
+income2013$net_std_income_household <- as.numeric(income2013$net_std_income_household) # Set to numeric
 
 # 2017 income data
-## LET OP: hier nog een bc_naam aan koppelen?
-columnnames <- names(read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2019_stadsdelen_3_21.xlsx", n_max = 0))
-columntypes <- ifelse(grepl("^[A-Z]", columnnames),"numeric", "guess")
-income2017  <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2019_stadsdelen_3_21.xlsx", skip = 8, sheet = 1, col_names = FALSE, col_types = columntypes)
+## LET OP: hier nog een bc_naam aan koppelen? #########
+income2017  <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2019_stadsdelen_3_21.xlsx", skip = 8, sheet = 1, col_names = FALSE, col_types = "text")
 income2017$bc_code <- substr(income2017$`...1`, 1, 3)
 income2017  <- income2017 %>% dplyr::filter(str_length(`bc_code`) == 3 & `bc_code` != "ASD" & !grepl(" ", bc_code) & str_length(`...1`) == 3 ) # Keep only neighbourhood observations
 income2017  <- income2017 %>% rename(`net_std_income_household` = `...13`)
+income2017$net_std_income_household <- gsub('[,]', '\\.', income2017$net_std_income_household) # Make sure use of commas and periods is consistent
 income2017[income2017 == "x"] <- NA # Set "x" to missing  
 income2017  <- income2017 %>% select(bc_code, net_std_income_household)
+income2017$net_std_income_household <- as.numeric(income2017$net_std_income_household) # Set to numeric
 
+# 2005 new buildings data
+## LET OP: hier nog een bc_naam aan koppelen? ##########
+buildings2005 <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2005_buurten_z_bouwperiode.xls", skip = 4, sheet = 1, col_names = FALSE)
+buildings2005$bc_code <- substr(buildings2005$`...1`, 1, 3)
+buildings2005 <- buildings2005[buildings2005$bc_code != "tot" & !is.na(buildings2005$bc_code),] # Keep only neighbourhood observations
+buildings2005 <- buildings2005 %>% select(c(bc_code, `...11`)) %>% rename(`builtafter2000` = `...11`) 
+buildings2005 <- aggregate(buildings2005$builtafter2000, by=list(buildings2005$bc_code), FUN=sum)
+buildings2005 <- buildings2005 %>% rename(bc_code = Group.1) %>% rename(builtafter2000 = x)
 
+# 2009 new buildings data
+buildings2009 <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2009_buurten_z_bouwperiode.xls", skip = 4, sheet = 1, col_names = FALSE)
+buildings2009$bc_code <- substr(buildings2009$`...1`, 1, 3)
+buildings2009 <- buildings2009[buildings2009$bc_code != "tot" & !is.na(buildings2009$bc_code),] # Keep only neighbourhood observations
+buildings2009 <- buildings2009 %>% select(c(bc_code, `...11`)) %>% rename(`builtafter2000` = `...11`) 
+buildings2009 <- aggregate(buildings2009$builtafter2000, by=list(buildings2009$bc_code), FUN=sum)
+buildings2009 <- buildings2009 %>% rename(bc_code = Group.1) %>% rename(builtafter2000 = x)
 
-#### TO-DO #### 
-  
-#building2005 <- #2005_buurten_z_bouwperiode.xls
-#building2009 <- #2009_buurten_z_bouwperiode.xls
-#building2013 <- #2013_buurten_z_bouwperiode.xlsx
-#building2017 <- #2017_stadsdelen_7_04.xlsx
+# 2013 new buildings data
+## LET OP: hier nog een bc_naam aan koppelen? ##########
+buildings2013 <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2013_buurten_z_bouwperiode.xlsx", skip = 4, sheet = 1, col_names = FALSE)
+buildings2013$bc_code <- substr(buildings2013$`...1`, 1, 3)
+buildings2013 <- buildings2013[buildings2013$bc_code != "tot" & !is.na(buildings2013$bc_code),] # Keep only neighbourhood observations
+buildings2013 <- buildings2013 %>% select(c(bc_code, `...11`)) %>% rename(`builtafter2000` = `...11`) 
+buildings2013 <- aggregate(buildings2013$builtafter2000, by=list(buildings2013$bc_code), FUN=sum)
+buildings2013 <- buildings2013 %>% rename(bc_code = Group.1) %>% rename(builtafter2000 = x)
 
-  
-  
-  
+# 2017 new buildings data
+## LET OP: hier nog een bc_naam aan koppelen? ##########
+buildings2017 <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2017_stadsdelen_7_04.xlsx", skip = 5, sheet = 1, col_names = FALSE)
+buildings2017$bc_code <- substr(buildings2017$`...1`, 1, 3)
+buildings2017 <- buildings2017 %>% dplyr::filter(str_length(`bc_code`) == 3 & `bc_code` != "ASD" & !grepl(" ", bc_code) & str_length(`...1`) == 3 ) # Keep only neighbourhood observations
+buildings2017 <- buildings2017 %>% select(c(bc_code, `...11`, `...12`)) %>% rename(`built2001-2010` = `...11`) %>% rename(`builtafter2010` = `...12`) 
+buildings2017[buildings2017 == "-"] <- "0"
+buildings2017$`built2001-2010` <- as.numeric(buildings2017$`built2001-2010`) # Set to numeric
+buildings2017$builtafter2010   <- as.numeric(buildings2017$builtafter2010)   # Set to numeric
+buildings2017$builtafter2000 <- buildings2017$`built2001-2010` + buildings2017$builtafter2010 # Add columns for one 'after 2000' category
+buildings2017 <- buildings2017 %>% select(c(bc_code, builtafter2000))
 
 # Read data for employment variable
 # Data retrieved from OIS Amsterdam
