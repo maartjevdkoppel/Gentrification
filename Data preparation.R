@@ -129,50 +129,64 @@ buurtdata <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/Buurtkenmerken
 housingdata_0509 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvoorraad 1995-2014.csv", col_names = TRUE)
 housingdata_1317 <- read_csv("/Users/Maartje/Desktop/LJA/Data POLetmaal/Woningvoorraad 2011-2021.csv", col_names = TRUE)
 
-# Read several files for additional gentrification variables: standardised net income per household, newly built properties
+# Read several files for additional gentrification variables: standardised net income per household (+ number of households), newly built properties
 # Data retrieved from OIS Amsterdam
 
-# 2005 income data
+# 2005 income data (+ number of households)
 income2005 <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2008_stadsdelen_40.xls", skip = 9, sheet = 1, col_names = FALSE, col_types = "text")
-income2005 <- income2005 %>% select(c(`...1`, `...2`, `...8`)) %>% rename(`brtk2005` = `...1`) %>% rename(`bc_naam` = `...2`) %>% rename(`net_std_income_household` = `...8`)
+income2005 <- income2005 %>% select(c(`...1`, `...2`, `...7`, `...8`)) %>% rename(`brtk2005` = `...1`) %>% rename(`bc_naam` = `...2`) %>% rename(`households` = `...7`) %>% rename(`net_std_income_household` = `...8`)
 income2005 <- income2005 %>% dplyr::filter(str_length(`brtk2005`) == 3 & `brtk2005` != "ASD") # Keep only neighbourhood observations
 income2005$net_std_income_household <- gsub(",", ".", income2005$net_std_income_household) # Make sure use of commas and periods is consistent
+income2005$households <- gsub(",", ".", income2005$households) # Make sure use of commas and periods is consistent
 income2005$net_std_income_household <- na_if(income2005$net_std_income_household, "x") # Set "x" to missing
+income2005$households <- na_if(income2005$households, "x")
 income2005$net_std_income_household <- as.numeric(income2005$net_std_income_household) # Set to numeric
+income2005$households <- as.numeric(income2005$households)
 
-# 2009 income data
+# 2009 income data (+ number of households)
 income2009  <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2011_stadsdelen_46.xls", skip = 4, sheet = 1, col_names = FALSE, col_types = "text")
 income2009$brtk2010 <- substr(income2009$`...1`, 1, 3)
 income2009  <- income2009[income2009$brtk2010 != "ASD" & !grepl(" ", income2009$brtk2010) & !is.na(income2009$brtk2010),] # Keep only neighbourhood observations
 income2009$bc_naam <- substring(income2009$`...1`, 5)
 income2009  <- income2009 %>% rename(`net_std_income_household` = `...7`)
+income2009  <- income2009 %>% rename(`households` = `...6`)
 income2009$net_std_income_household <- gsub('[,]', '\\.', income2009$net_std_income_household) # Make sure use of commas and periods is consistent
+income2009$households <- gsub('[,]', '\\.', income2009$households) 
 income2009$net_std_income_household <- na_if(income2009$net_std_income_household, "x") # Set "x" to missing
-income2009 <- income2009 %>% select(c(brtk2010, bc_naam, net_std_income_household))
+income2009$households <- na_if(income2009$households, "x") 
+income2009 <- income2009 %>% select(c(brtk2010, bc_naam, net_std_income_household, households))
 income2009$net_std_income_household <- as.numeric(income2009$net_std_income_household) # Set to numeric
+income2009$households <- as.numeric(income2009$households)
 
-# 2013 income data
+# 2013 income data (+ number of households)
 columnnames <- names(read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2016_stadsdelen_3_21.xlsx", n_max = 0))
 columntypes <- ifelse(grepl("^[A-Z]", columnnames),"numeric", "guess")
 income2013  <- read_excel("/Users/Maartje/Desktop/LJA/Data POLetmaal/2016_stadsdelen_3_21.xlsx", skip = 8, sheet = 1, col_names = FALSE, col_types = "text")
 income2013$`bc-code` <- substr(income2013$`...1`, 1, 3)
 income2013  <- income2013 %>% dplyr::filter(str_length(`bc-code`) == 3 & `bc-code` != "ASD" & !grepl(" ", `bc-code`) & str_length(`...1`) == 3 ) # Keep only neighbourhood observations
 income2013  <- income2013 %>% rename(`net_std_income_household` = `...13`)
+income2013  <- income2013 %>% rename(`households` = `...7`)
 income2013$net_std_income_household <- gsub('[,]', '\\.', income2013$net_std_income_household) # Make sure use of commas and periods is consistent
+income2013$households <- gsub('[,]', '\\.', income2013$households) 
 income2013$net_std_income_household <- na_if(income2013$net_std_income_household, "x") # Set "x" to missing
-income2013  <- income2013 %>% select(`bc-code`, net_std_income_household)
+income2013$households <- na_if(income2013$households, "x") 
+income2013  <- income2013 %>% select(`bc-code`, net_std_income_household, households)
 income2013$net_std_income_household <- as.numeric(income2013$net_std_income_household) # Set to numeric
+income2013$households <- as.numeric(income2013$households) # Set to numeric
 
-# 2017 income data
-## LET OP: hier nog een bc_naam aan koppelen? #########
+# 2017 income data (+ number of households)
 income2017  <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2019_stadsdelen_3_21.xlsx", skip = 8, sheet = 1, col_names = FALSE, col_types = "text")
 income2017$`bc-code` <- substr(income2017$`...1`, 1, 3)
 income2017  <- income2017 %>% dplyr::filter(str_length(`bc-code`) == 3 & `bc-code` != "ASD" & !grepl(" ", `bc-code`) & str_length(`...1`) == 3 ) # Keep only neighbourhood observations
 income2017  <- income2017 %>% rename(`net_std_income_household` = `...13`)
+income2017  <- income2017 %>% rename(`households` = `...7`)
 income2017$net_std_income_household <- gsub('[,]', '\\.', income2017$net_std_income_household) # Make sure use of commas and periods is consistent
+income2017$households <- gsub('[,]', '\\.', income2017$households) 
 income2017$net_std_income_household <- na_if(income2017$net_std_income_household, "x") # Set "x" to missing
-income2017  <- income2017 %>% select(`bc-code`, net_std_income_household)
+income2017$households <- na_if(income2017$households, "x")
+income2017  <- income2017 %>% select(`bc-code`, net_std_income_household, households)
 income2017$net_std_income_household <- as.numeric(income2017$net_std_income_household) # Set to numeric
+income2017$households <- as.numeric(income2017$households) # Set to numeric
 
 # 2005 new buildings data
 buildings2005 <- read_xls("/Users/Maartje/Desktop/LJA/Data POLetmaal/2005_buurten_z_bouwperiode.xls", skip = 4, sheet = 1, col_names = FALSE)
@@ -240,14 +254,14 @@ employ_2017$employ <- as.numeric(employ_2017$employ)
 # NEIGHBOURHOOD DATA - Preparing data ---------------------------------------------------------------------------
 
 # Add 2015 BC codes to 2005 and 2009 employment, net income & buildings data
-# Retrieve 2015 codes from transition document: [add source]
+# Retrieve 2010 and 2015 codes from transition document: [add source]
 bc_overgang <- read_xlsx("/Users/Maartje/Desktop/LJA/Data POLetmaal/2015_overgang 2005 2010 2015.xlsx", sheet = 2, col_names = TRUE )
 bc_overgang <- bc_overgang  %>% select(c(brtk2005, brtk2010, brtk2015)) 
 
-employ_2005   <- merge(employ_2005,   bc_overgang, by="brtk2005", x.all=TRUE) # Add 2015 codes to employment data
+employ_2005   <- merge(employ_2005,   bc_overgang, by="brtk2005", x.all=TRUE) # Add 2015 codes to employment, income & buildings data
 employ_2009   <- merge(employ_2009,   bc_overgang, by="brtk2005", x.all=TRUE)
 income2005    <- merge(income2005,    bc_overgang, by="brtk2005", x.all=TRUE)
-income2009    <- merge(income2009,    bc_overgang, by="brtk2010", x.all=TRUE)
+income2009    <- merge(income2009,    bc_overgang, by="brtk2010", x.all=TRUE) # 2010 code needed for 2009 income data!
 buildings2005 <- merge(buildings2005, bc_overgang, by="brtk2005", x.all=TRUE)
 buildings2009 <- merge(buildings2009, bc_overgang, by="brtk2005", x.all=TRUE)
 
@@ -268,10 +282,59 @@ buildings2009 <- buildings2009 %>% rename(`bc-code` = `brtk2015`)
 
 employ_2005   <- employ_2005   %>% select(c(`bc-code`, employ)) # Drop 2005 & 2010 BC code, are now redundant
 employ_2009   <- employ_2009   %>% select(c(`bc-code`, employ))
-income2005    <- income2005    %>% select(c(`bc-code`, net_std_income_household)) 
-income2009    <- income2009    %>% select(c(`bc-code`, net_std_income_household))
+income2005    <- income2005    %>% select(c(`bc-code`, net_std_income_household, households)) 
+income2009    <- income2009    %>% select(c(`bc-code`, net_std_income_household, households))
 buildings2005 <- buildings2005 %>% select(c(`bc-code`, builtafter2000)) 
 buildings2009 <- buildings2009 %>% select(c(`bc-code`, builtafter2000))
+
+# Find duplicates in BC codes
+n_occur <- data.frame(table(employ_2005$`bc-code`)) # In all datasets, there are 2 neighbourhoods with BC = K47 (later to be merged)
+n_occur[n_occur$Freq > 1,]
+
+n_occur <- data.frame(table(employ_2009$`bc-code`))
+n_occur[n_occur$Freq > 1,]
+
+n_occur <- data.frame(table(income2005$`bc-code`))
+n_occur[n_occur$Freq > 1,]
+
+n_occur <- data.frame(table(income2009$`bc-code`))
+n_occur[n_occur$Freq > 1,]
+
+n_occur <- data.frame(table(buildings2005$`bc-code`))
+n_occur[n_occur$Freq > 1,]
+
+n_occur <- data.frame(table(buildings2009$`bc-code`))
+n_occur[n_occur$Freq > 1,]
+
+# Make net income per household: 'netto wijk product' (net_std_income_household * households)
+# This is needed for later aggregations
+income2005$net_wijk_product <- income2005$net_std_income_household * income2005$households
+income2009$net_wijk_product <- income2009$net_std_income_household * income2009$households
+income2013$net_wijk_product <- income2013$net_std_income_household * income2013$households
+income2017$net_wijk_product <- income2017$net_std_income_household * income2017$households
+
+# Drop net_std_income_household, we now have the variable hat is absolute and apt for aggregation
+income2005 <- income2005 %>% select(c(`bc-code`, net_wijk_product, households))
+income2009 <- income2009 %>% select(c(`bc-code`, net_wijk_product, households))
+income2013 <- income2013 %>% select(c(`bc-code`, net_wijk_product, households))
+income2017 <- income2017 %>% select(c(`bc-code`, net_wijk_product, households))
+
+# Aggregate: as K47 represents two neighbourhoods (later to be merged), these rows need to be aggregated 
+employ_2005   <- aggregate(employ_2005$employ,   by=list(employ_2005$`bc-code`),   FUN = sum) # simple sum suffices bc absolute numbers
+employ_2009   <- aggregate(employ_2009$employ,   by=list(employ_2009$`bc-code`),   FUN = sum)
+buildings2005 <- aggregate(buildings2005$builtafter2000, by=list(buildings2005$`bc-code`), FUN = sum)
+buildings2009 <- aggregate(buildings2009$builtafter2000, by=list(buildings2009$`bc-code`), FUN = sum)
+income2005    <- aggregate(income2005[,2:3], by=list(income2005$`bc-code`), FUN = sum) 
+income2009    <- aggregate(income2009[,2:3], by=list(income2009$`bc-code`), FUN = sum) 
+
+# Rename columns in aggregated data
+employ_2005   <- employ_2005   %>% rename(`bc-code` = Group.1) %>% rename(employ = x)
+employ_2009   <- employ_2009   %>% rename(`bc-code` = Group.1) %>% rename(employ = x)
+buildings2005 <- buildings2005 %>% rename(`bc-code` = Group.1) %>% rename(builtafter2000 = x)
+buildings2009 <- buildings2009 %>% rename(`bc-code` = Group.1) %>% rename(builtafter2000 = x)
+income2005    <- income2005    %>% rename(`bc-code` = Group.1) 
+income2009    <- income2009    %>% rename(`bc-code` = Group.1) 
+
 
 # HOUSINGDATA
 # Remove empty rows from housingdata_1317
@@ -350,14 +413,11 @@ buurtdata2009 <- merge(buurtdata2009, employ_2009, by="bc-code", all=TRUE)
 buurtdata2013 <- merge(buurtdata2013, employ_2013, by="bc-code", all=TRUE)
 buurtdata2017 <- merge(buurtdata2017, employ_2017, by="bc-code", all=TRUE)
 
-
-
 ## LET OP: buurten die er dubbel inzitten verdubbelen zich hier -- lijkt hier nog alleen K47
 ## Bij verder mergen worden het er steeds meer.
 ## Wat hieraan te doen? Met aggregeren van buurten niet opgelost, telt dan te veel opt
 ## Mogelijk is ook specifiek K47+K50 anders omdat er niet NAs staan, maar veel data 
 ## Maar lijkt ook bij andere buurten niet goed te gaan.
-
 
 
 # Add income data to buurtdata
@@ -494,9 +554,9 @@ subdata_buurt <- rename.bc(subdata_buurt, condition, "T96+T92", "Holendrecht/Rei
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Drop neighbourhoods 
-# 'M50' is not present in the voting data, 'Z99' and 'X99' are false codes or non-existent neighbourhood
+# 'M50' (and its old code M74) is not present in the voting data, 'Z99' and 'X99' are false codes or non-existent neighbourhood
 # 'K23' ('Zuidas') is dropped as it was newly created in 2018 from 4 constitutive parts (K59, K52, K90 and K91) which also continue to exist
-subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "Z99" & subdata_buurt$bc_code != "K23" & subdata_buurt$bc_code != "X99",]
+subdata_buurt <- subdata_buurt[subdata_buurt$bc_code != "M50" & subdata_buurt$bc_code != "M74" & subdata_buurt$bc_code != "Z99" & subdata_buurt$bc_code != "K23" & subdata_buurt$bc_code != "X99",]
 
 # New back-up of data
 subdata_buurt_backup2 <- subdata_buurt
@@ -529,6 +589,12 @@ subdata_buurt$WWB_2009 <- (subdata_buurt$employ_2009 / subdata_buurt$`BEVPOTBBV1
 subdata_buurt$WWB_2013 <- (subdata_buurt$employ_2013 / subdata_buurt$`BEVPOTBBV15-64_2013`) * 100 
 subdata_buurt$WWB_2017 <- (subdata_buurt$employ_2017 / subdata_buurt$`BEVPOTBBV15-64_2017`) * 100 
 
+# Restandardise: turn net_wijk_product back into net income per household
+subdata_buurt$netHHincome_2005 <- (subdata_buurt$net_wijk_product_2005 / subdata_buurt$households_2005) 
+subdata_buurt$netHHincome_2009 <- (subdata_buurt$net_wijk_product_2009 / subdata_buurt$households_2009) 
+subdata_buurt$netHHincome_2013 <- (subdata_buurt$net_wijk_product_2013 / subdata_buurt$households_2013) 
+subdata_buurt$netHHincome_2017 <- (subdata_buurt$net_wijk_product_2017 / subdata_buurt$households_2017) 
+
 # Housing variables - divide by WVOORRBAG
 house_vars <- startsWith(names(subdata_buurt), "WHUUR") | startsWith(names(subdata_buurt), "WCOR")
 house_vars_2005 <- house_vars & endsWith(names(subdata_buurt), "2005")
@@ -540,6 +606,12 @@ subdata_buurt[,house_vars_2005] <- (subdata_buurt[,house_vars_2005] / subdata_bu
 subdata_buurt[,house_vars_2009] <- (subdata_buurt[,house_vars_2009] / subdata_buurt$WVOORRBAG_2009) * 100
 subdata_buurt[,house_vars_2013] <- (subdata_buurt[,house_vars_2013] / subdata_buurt$WVOORRBAG_2013) * 100
 subdata_buurt[,house_vars_2017] <- (subdata_buurt[,house_vars_2017] / subdata_buurt$WVOORRBAG_2017) * 100
+
+# Share of new buildings - divide 'buildings built after 2000' by WVOORRBAG
+subdata_buurt$newbuildings_2005 <- (subdata_buurt$builtafter2000_2005 / subdata_buurt$WVOORRBAG_2005) * 100
+subdata_buurt$newbuildings_2009 <- (subdata_buurt$builtafter2000_2009 / subdata_buurt$WVOORRBAG_2009) * 100
+subdata_buurt$newbuildings_2013 <- (subdata_buurt$builtafter2000_2013 / subdata_buurt$WVOORRBAG_2013) * 100
+subdata_buurt$newbuildings_2017 <- (subdata_buurt$builtafter2000_2017 / subdata_buurt$WVOORRBAG_2017) * 100
 
 # Unemployment variable - divide by BEV15-65
 work_vars      <- startsWith(names(subdata_buurt), "PREG")
@@ -603,6 +675,19 @@ subdata_buurt$turnout_2006 <- (subdata_buurt$totaal_2006 / subdata_buurt$kies.ge
 subdata_buurt$turnout_2010 <- (subdata_buurt$totaal_2010 / subdata_buurt$kiesge.rechtigden_2010) * 100
 subdata_buurt$turnout_2014 <- (subdata_buurt$totaal_2014 / subdata_buurt$kg_2014)                * 100
 subdata_buurt$turnout_2018 <- (subdata_buurt$totaal_2018 / subdata_buurt$opgeroepenen_2018)      * 100
+
+
+# COMPLETE DATASET - Change variables ----------------------------------------------------------------
+
+# Variables for change in net household income (NOTE: now only change at t-1)
+subdata_buurt$netincomedelta_2009 <- subdata_buurt$netHHincome_2009 - subdata_buurt$netHHincome_2005 # all differences with t-1
+subdata_buurt$netincomedelta_2013 <- subdata_buurt$netHHincome_2013 - subdata_buurt$netHHincome_2009 # all differences with t-1
+subdata_buurt$netincomedelta_2017 <- subdata_buurt$netHHincome_2017 - subdata_buurt$netHHincome_2013 # all differences with t-1
+
+# Variables for change in share of new buildings (NOTE: now only change at t-1)
+subdata_buurt$newbuildingsdelta_2009 <- subdata_buurt$newbuildings_2009 - subdata_buurt$newbuildings_2005 # all differences with t-1
+subdata_buurt$newbuildingsdelta_2013 <- subdata_buurt$newbuildings_2013 - subdata_buurt$newbuildings_2009 # all differences with t-1
+subdata_buurt$newbuildingsdelta_2017 <- subdata_buurt$newbuildings_2017 - subdata_buurt$newbuildings_2013 # all differences with t-1
 
 # Variables for changes in social housing
 subdata_buurt$WHUURTSLGdelta2005_2009 <- subdata_buurt$WHUURTSLG_2009 - subdata_buurt$WHUURTSLG_2005 # all differences with 2005
@@ -675,7 +760,7 @@ subdata_buurt_long = subset(subdata_buurt_long, select = -c(totaal, BEVTOTAAL, `
                                                             `BEV55-59`, `BEV60-64`, `BEV65-69`, 
                                                             `BEV70-74`, `BEVPOTBBV15-65`, `BEV15-74`, 
                                                             WVOORRBAG, kg, kiesge.rechtigden, opgeroepenen,
-                                                            kies.gerechtigden))
+                                                            kies.gerechtigden, PREGWERKL, employ))
 
 # Rename variables 
 subdata_buurt_long <- subdata_buurt_long %>% rename(bc_name                = bc_naam)
@@ -692,11 +777,13 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(age_0t18               = `BE
 subdata_buurt_long <- subdata_buurt_long %>% rename(age_18t26              = `BEV18-26`)
 subdata_buurt_long <- subdata_buurt_long %>% rename(age_27t65              = `BEV27-65`)
 subdata_buurt_long <- subdata_buurt_long %>% rename(age_66plus             = BEV66PLUS)
-subdata_buurt_long <- subdata_buurt_long %>% rename(unempl                 = PREGWERKL)
+subdata_buurt_long <- subdata_buurt_long %>% rename(age_15t64              = `BEVPOTBBV15-64`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(unempl                 = WWB)
 subdata_buurt_long <- subdata_buurt_long %>% rename(edu_low                = BEVOPLLAAG)
 subdata_buurt_long <- subdata_buurt_long %>% rename(edu_mid                = BEVOPLMID)
 subdata_buurt_long <- subdata_buurt_long %>% rename(edu_high               = BEVOPLHOOG)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc            = WHUURTSLG)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_pub            = WCORHUUR)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2005  = WHUURTSLGdelta2006)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2009  = WHUURTSLGdelta2010)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2013  = WHUURTSLGdelta2014)

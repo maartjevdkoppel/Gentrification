@@ -25,7 +25,7 @@
 
 * Open data * 
 
-	import delimited "$data/data_sub_merged_long.csv", clear case(preserve) ///
+	import delimited "$data/data_sub_merged_long 2.csv", clear case(preserve) ///
            numericcols(3/34) stringcols(1/2)
 
 * Clean data *
@@ -54,13 +54,13 @@
 	lab var housing_soc_delta2005 "∆ % Social housing since 2005"
 	lab var housing_soc_delta2009 "∆ % Social housing since 2006"
 	lab var housing_soc_delta2013 "∆ % Social housing since 2013"
-	lab var housing_soc_delta "Decline in social housing"
-	lab var housing_pub_delta "Decline in public housing"
+	lab var housing_soc_delta "∆ % Social housing (t-1)"
+	lab var housing_pub_delta "∆ % Public housing (t-1)"
 	lab var PVDA_delta2006 "∆ % PvdA vote since 2005"
 	lab var PVDA_delta2010 "∆ % PvdA vote since 2006"
 	lab var PVDA_delta2014 "∆ % PvdA vote since 2013"
 	lab var PVDA_delta "∆ % PvdA vote since previous election"
-	lab var WWB "% Recipients unemployment benefits"
+	lab var unempl "% Recipients unemployment benefits"
 	lab var turnout "Turnout"
 
 // Encode neighbourhood variable
@@ -70,7 +70,18 @@
 	gen housing_pub_delta1 = real(housing_pub_delta)
 	drop housing_pub_delta
 	rename housing_pub_delta1 housing_pub_delta
-	lab var housing_pub_delta "Decline in public housing"	
+	lab var housing_pub_delta "∆ % Public housing (t-1)"
+	
+	gen netincomedelta1 = real(netincomedelta)
+	drop netincomedelta
+	rename netincomedelta1 netincomedelta
+	lab var netincomedelta "∆ % Net income per household (t-1)"
+	
+	gen newbuildingsdelta1 = real(newbuildingsdelta)
+	drop newbuildingsdelta
+	rename newbuildingsdelta1 newbuildingsdelta
+	lab var newbuildingsdelta "∆ % Share of new buildings (t-1)"
+	
 	
 * Check whether manually combined neighbourhoods are significantly different *
 
@@ -79,6 +90,8 @@
 	ttest turnout,           by(bc_combined)
 	ttest housing_soc_delta, by(bc_combined)
 	ttest housing_pub_delta, by(bc_combined) // significant difference
+	ttest newbuildingsdelta, by(bc_combined)
+	
 	ttest imm_Sur,           by(bc_combined)
 	ttest imm_Ant,           by(bc_combined)
 	ttest imm_Tur,           by(bc_combined) // significant difference
