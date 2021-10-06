@@ -82,6 +82,57 @@
 	rename newbuildingsdelta1 newbuildingsdelta
 	lab var newbuildingsdelta "∆ % Share of new buildings (t-1)"
 	
+	gen housing_soc_delta20051 = real(housing_soc_delta2005)
+	drop housing_soc_delta2005
+	rename housing_soc_delta20051 housing_soc_delta2005
+	lab var housing_soc_delta2005 "∆ % Social housing since 2005"
+	
+	gen housing_soc_delta20091 = real(housing_soc_delta2009)
+	drop housing_soc_delta2009
+	rename housing_soc_delta20091 housing_soc_delta2009
+	lab var housing_soc_delta2009 "∆ % Social housing since 2009"
+	
+	gen housing_soc_delta20131 = real(housing_soc_delta2013)
+	drop housing_soc_delta2013
+	rename housing_soc_delta20131 housing_soc_delta2013
+	lab var housing_soc_delta2013 "∆ % Social housing since 2013"
+	
+	gen housing_soc_delta1 = real(housing_soc_delta)
+	drop housing_soc_delta
+	rename housing_soc_delta1 housing_soc_delta
+	lab var housing_soc_delta "∆ % Social housing (t-1)"
+	
+	gen GLdelta20101 = real(GLdelta2010)
+	drop GLdelta2010
+	rename GLdelta20101 GLdelta2010
+	lab var GLdelta2010 "∆ % GroenLinks vote since 2010"
+	
+	gen GLdelta20141 = real(GLdelta2014)
+	drop GLdelta2014
+	rename GLdelta20141 GLdelta2014
+	lab var GLdelta2014 "∆ % GroenLinks vote since 2014"
+	
+	gen PVDA_delta20061 = real(PVDA_delta2006)
+	drop PVDA_delta2006
+	rename PVDA_delta20061 PVDA_delta2006
+	lab var PVDA_delta2006 "∆ % PvdA vote since 2006"
+	
+	gen PVDA_delta20101 = real(PVDA_delta2010)
+	drop PVDA_delta2010
+	rename PVDA_delta20101 PVDA_delta2010
+	lab var PVDA_delta2010 "∆ % PvdA vote since 2010"
+	
+	gen PVDA_delta20141 = real(PVDA_delta2014)
+	drop PVDA_delta2014
+	rename PVDA_delta20141 PVDA_delta2014
+	lab var PVDA_delta2014 "∆ % PvdA vote since 2014"
+	
+	gen PVDA_delta1 = real(PVDA_delta)
+	drop PVDA_delta
+	rename PVDA_delta1 PVDA_delta
+	lab var PVDA_delta "∆ % PvdA vote since last election"
+	
+	
 	
 * Check whether manually combined neighbourhoods are significantly different *
 
@@ -91,7 +142,7 @@
 	ttest housing_soc_delta, by(bc_combined)
 	ttest housing_pub_delta, by(bc_combined) // significant difference
 	ttest newbuildingsdelta, by(bc_combined)
-	
+	ttest netincomedelta,    by(bc_combined)
 	ttest imm_Sur,           by(bc_combined)
 	ttest imm_Ant,           by(bc_combined)
 	ttest imm_Tur,           by(bc_combined) // significant difference
@@ -101,13 +152,13 @@
 	ttest imm_Ant,           by(bc_combined)
 	ttest age_18t26,         by(bc_combined)
 	ttest age_66plus,        by(bc_combined)
-	ttest WWB,               by(bc_combined) // significant difference
+	ttest unempl,               by(bc_combined) // significant difference
 	ttest edu_low,           by(bc_combined)
 	ttest edu_high,          by(bc_combined)
 
 * Check for multicollinearity gentrification variables *
 
-	correlate housing_soc_delta housing_pub_delta
+	correlate housing_soc_delta housing_pub_delta newbuildingsdelta netincomedelta
 	
 	
 ********************************************************************************
@@ -178,18 +229,57 @@
 // Set data as panel data
 	xtset c election, delta(4)
 
-// Create lagged dependent variables
-	gen laggedPVDA      = l.PVDA
-	gen laggedMCparties = l.MCparties
-	gen laggedTURN      = l.turnout
+// Create lagged dependent variables (NO LONGER NEEDED)
+	*gen laggedPVDA      = l.PVDA
+	*gen laggedMCparties = l.MCparties
+	*gen laggedTURN      = l.turnout
 	
-	lab var laggedPVDA      "% PvdA vote at previous election"
-	lab var laggedMCparties "% Multicultural parties vote at previous election"
-	lab var laggedTURN      "Turnout at previous election"
+	*lab var laggedPVDA      "% PvdA vote at previous election"
+	*lab var laggedMCparties "% Multicultural parties vote at previous election"
+	*lab var laggedTURN      "Turnout at previous election"
 
 // Save panel data
 	save "$posted/data_sub_merged_long_panel", replace
 
+	
+********************************************************************************
+* GENTRIFICATION - all indicators (TEMPORARY, clean up this code!)
+********************************************************************************
+	
+// Remove missings on main predictor
+	keep if !missing(housing_soc_delta)
+	keep if !missing(netincomedelta)
+	keep if !missing(newbuildingsdelta)	
+	
+* Predict support for the PvdA: OLS with time dummies (2010-2018) *
+
+// Model 1: gentrification
+	reg PVDA housing_soc_delta netincomedelta newbuildingsdelta
+	eststo PVDA_temp1
+	
+// Model 1B: add time dummies
+	reg PVDA housing_soc_delta netincomedelta newbuildingsdelta i.election
+	eststo PVDA_temp1B
+				   
+// Model 2: add control variables 
+	reg PVDA housing_soc_delta netincomedelta newbuildingsdelta i.election ///
+	    imm_Sur imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 ///
+		age_66plus unempl
+	eststo PVDA_temp2
+		   
+// Model 2A: add control variables + education
+	reg PVDA housing_soc_delta netincomedelta newbuildingsdelta i.election ///
+	    imm_Sur imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 ///
+		age_66plus unempl edu_low edu_high 
+	eststo PVDA_temp2A
+	
+// Export regression table: Model temp1B and temp2
+	esttab PVDA_temp1B PVDA_temp2 using "$tables/Newgentvars-PvdA.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") replace	
+	
+	
+	
 	
 ********************************************************************************
 * GENTRIFICATION 1: ∆ % social housing *
