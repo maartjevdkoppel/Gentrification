@@ -75,7 +75,7 @@
 	gen netincomedelta1 = real(netincomedelta)
 	drop netincomedelta
 	rename netincomedelta1 netincomedelta
-	lab var netincomedelta "∆ % Net income per household (t-1)"
+	lab var netincomedelta "∆ Net income per household (t-1)"
 	
 	gen newbuildingsdelta1 = real(newbuildingsdelta)
 	drop newbuildingsdelta
@@ -276,9 +276,103 @@
 // Export regression table: Model temp1B and temp2
 	esttab PVDA_temp1B PVDA_temp2 using "$tables/Newgentvars-PvdA.rtf", ///
 	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
-           addnotes("Note. Data from OIS Amsterdam, own adaption") replace	
+           addnotes("Note. Data from OIS Amsterdam, own adaption") ///
+		   title("Fixed effects model for PvdA support (2010-2018, all gent. variables)") ///
+		   replace	
+		   
+
+* Predict change in support for PvdA (between 2010 and 2018) *
 	
+// Change ∆2010 to 2010-2018 only 
+	gen PVDA_delta20102018 = PVDA_delta2010 if election == 2018
 	
+// Model 1: gentrification variables
+	reg PVDA_delta20102018 housing_soc_delta netincomedelta newbuildingsdelta
+	eststo PVDA_change_temp1
+	
+// Model 2: add control variables (including education)	
+	reg PVDA_delta20102018 housing_soc_delta netincomedelta newbuildingsdelta ///
+		imm_Sur imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 age_66plus ///
+		unempl edu_low edu_high
+	eststo PVDA_change_temp2
+	
+// Export regression table
+	esttab PVDA_change_temp1 PVDA_change_temp2 using "$tables/Newgentvars-changePVDA.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") ///
+		   title("OLS model for change in PvdA support (between 2010 and 2018, all gent. variables)") ///
+		   replace	
+		   
+	
+
+* Predict voter turnout: OLS with neighbourhood fixed effects (2010-2018) * 
+
+// Generate neighbourhood fixed effects with de-meaning
+	sum turnout  // calculate overall mean and neighbourhood means
+	gen o_mean = r(mean)
+		lab var o_mean "Overall mean"
+
+	gen c_mean = .
+		lab var c_mean "Neighbourhood mean"
+	forvalues x = 1/84 {								
+		sum turnout if c == `x'
+		replace c_mean = r(mean) if c == `x'
+	}
+
+	gen fe = c_mean - o_mean // create fixed effects variable
+
+// Model 1: gentrification
+	reg turnout housing_soc_delta netincomedelta newbuildingsdelta
+	eststo TURN_temp1
+	
+// Model 1A: add lagged dependent variable
+	*reg turnout housing_soc_delta laggedTURN
+	*eststo TURN_M1A
+
+// Model 1B: add neighbourhood fixed effects 
+	reg turnout housing_soc_delta netincomedelta newbuildingsdelta fe
+	eststo TURN_temp1B
+				   
+// Model 2: add control variables 
+	reg turnout housing_soc_delta netincomedelta newbuildingsdelta fe imm_Sur ///
+		imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 age_66plus unempl
+	eststo TURN_temp2
+		   
+// Model 2A: add control variables + education
+	reg turnout housing_soc_delta netincomedelta newbuildingsdelta fe imm_Sur ///
+		imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 age_66plus unempl ///
+		edu_low edu_high 
+	eststo TURN_temp2A
+	
+// Export regression table: Model 1B and 2
+	esttab TURN_temp1B TURN_temp2 using "$tables/Newgentvars-turnout.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") ///
+		   title("Fixed effects model for turnout (2010-2018, all gent. variables)") ///
+		   replace
+
+		   
+* Predict support for multicultural parties: 2018 only *
+
+// Only consider multicultural party support for 2018: DENK & BIJ1
+	gen MCparties18 = MCparties if election == 2018
+
+// Model 1: gentrification (2014 & 2018)
+	reg MCparties18 housing_soc_delta netincomedelta newbuildingsdelta
+	eststo MC18_temp1
+
+// Model 2: add control variables (including education) (2018 only)
+	reg MCparties18 housing_soc_delta netincomedelta newbuildingsdelta ///
+		imm_Sur imm_Ant imm_Tur imm_Mar imm_otherNW imm_W age_18t26 age_66plus ///
+		unempl edu_low edu_high 
+	eststo MC18_temp2
+	
+// Export regression table: Model 1A and 2
+	esttab MC18_temp1 MC18_temp2 using "$tables/Newgentvars-MCparties18.rtf", ///
+	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
+           addnotes("Note. Data from OIS Amsterdam, own adaption") ///
+		   title("OLS model for multicultural party support (2018, all gent. variables)") ///
+		   replace
 	
 	
 ********************************************************************************
@@ -514,7 +608,7 @@
 	       b(%5.3f) se(%5.3f) ar2(3) obslast label mlabels(none) ar2 ///
            addnotes("Note. Data from OIS Amsterdam, own adaption") replace
 
-		   ********************************************************************************
+********************************************************************************
 * BOTH GENTRIFICATION INDICATORS + BIJ1, DENK SEPARATE			         	   *
 ********************************************************************************
 
