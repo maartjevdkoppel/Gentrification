@@ -16,6 +16,7 @@ library(readxl)
 library(dplyr)
 library(stats)
 library(tidyr)
+library(expss)
 
 # VOTE SHARES - Reading data ---------------------------------------------------------------------------------
 
@@ -680,9 +681,13 @@ subdata_buurt$turnout_2018 <- (subdata_buurt$totaal_2018 / subdata_buurt$opgeroe
 # COMPLETE DATASET - Change variables ----------------------------------------------------------------
 
 # Variables for change in net household income (NOTE: now only change at t-1)
-subdata_buurt$netincomedelta_2009 <- subdata_buurt$netHHincome_2009 - subdata_buurt$netHHincome_2005 # all differences with t-1
-subdata_buurt$netincomedelta_2013 <- subdata_buurt$netHHincome_2013 - subdata_buurt$netHHincome_2009 # all differences with t-1
-subdata_buurt$netincomedelta_2017 <- subdata_buurt$netHHincome_2017 - subdata_buurt$netHHincome_2013 # all differences with t-1
+subdata_buurt$`netincomedelta_t-1_2009` <- subdata_buurt$netHHincome_2009 - subdata_buurt$netHHincome_2005 # all differences with t-1
+subdata_buurt$`netincomedelta_t-1_2013` <- subdata_buurt$netHHincome_2013 - subdata_buurt$netHHincome_2009 # all differences with t-1
+subdata_buurt$`netincomedelta_t-1_2017` <- subdata_buurt$netHHincome_2017 - subdata_buurt$netHHincome_2013 # all differences with t-1
+
+subdata_buurt$netincomedelta2005_2017 <- subdata_buurt$netHHincome_2017 - subdata_buurt$netHHincome_2005 # difference at t-3
+subdata_buurt$netincomedelta2009_2017 <- subdata_buurt$netHHincome_2017 - subdata_buurt$netHHincome_2009 # difference at t-2
+subdata_buurt$netincomedelta2013_2017 <- subdata_buurt$netHHincome_2017 - subdata_buurt$netHHincome_2013 # difference at t-1
 
 # Variables for change in share of new buildings (NOTE: now only change at t-1)
 subdata_buurt$newbuildingsdelta_2009 <- subdata_buurt$newbuildings_2009 - subdata_buurt$newbuildings_2005 # all differences with t-1
@@ -707,6 +712,10 @@ subdata_buurt$`WHUURTSLG_t-1_2017` <- subdata_buurt$WHUURTSLG_2017 - subdata_buu
 subdata_buurt$`WCORHUURt-1_2009` <- subdata_buurt$WCORHUUR_2009 - subdata_buurt$WCORHUUR_2005 # all differences with t-1
 subdata_buurt$`WCORHUURt-1_2013` <- subdata_buurt$WCORHUUR_2013 - subdata_buurt$WCORHUUR_2009
 subdata_buurt$`WCORHUURt-1_2017` <- subdata_buurt$WCORHUUR_2017 - subdata_buurt$WCORHUUR_2013
+
+subdata_buurt$WCORHUURdelta2005_2017 <- subdata_buurt$WCORHUUR_2017 - subdata_buurt$WCORHUUR_2005 # difference at t-3
+subdata_buurt$WCORHUURdelta2009_2017 <- subdata_buurt$WCORHUUR_2017 - subdata_buurt$WCORHUUR_2009 # difference at t-2
+subdata_buurt$WCORHUURdelta2013_2017 <- subdata_buurt$WCORHUUR_2017 - subdata_buurt$WCORHUUR_2013 # difference at t-1
 
 # Variables for changes in party support
 subdata_buurt$GLdelta2010_2018 <- subdata_buurt$GL_2018 - subdata_buurt$GL_2010
@@ -784,14 +793,21 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(edu_mid                = BEV
 subdata_buurt_long <- subdata_buurt_long %>% rename(edu_high               = BEVOPLHOOG)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc            = WHUURTSLG)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_pub            = WCORHUUR)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_pub_delta2005  = WCORHUURdelta2006)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_pub_delta2009  = WCORHUURdelta2010)
+subdata_buurt_long <- subdata_buurt_long %>% rename(housing_pub_delta2013  = WCORHUURdelta2014)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2005  = WHUURTSLGdelta2006)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2009  = WHUURTSLGdelta2010)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta2013  = WHUURTSLGdelta2014)
+subdata_buurt_long <- subdata_buurt_long %>% rename(netincome_delta2005    = netincomedelta2006)
+subdata_buurt_long <- subdata_buurt_long %>% rename(netincome_delta2009    = netincomedelta2010)
+subdata_buurt_long <- subdata_buurt_long %>% rename(netincome_delta2013    = netincomedelta2014)
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2006         = PVDAdelta2006)
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2010         = PVDAdelta2010)
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta2014         = PVDAdelta2014)       
 subdata_buurt_long <- subdata_buurt_long %>% rename(bc_combined            = BCcombined)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_soc_delta      = `WHUURTSLG_t-1`)
+subdata_buurt_long <- subdata_buurt_long %>% rename(netincome_delta        = `netincomedelta_t-1`)
 subdata_buurt_long <- subdata_buurt_long %>% rename(PVDA_delta             = `PVDAt-1`)
 subdata_buurt_long <- subdata_buurt_long %>% rename(housing_pub_delta     = `WCORHUURt-1`)
 
@@ -803,4 +819,61 @@ subdata_buurt_long <- subdata_buurt_long %>% rename(housing_pub_delta     = `WCO
 # Export long data
 write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/LJA/data_sub_merged_long.csv", row.names = FALSE)
 
+
+# Revised analysis: tidy & expert data ---------------------------------------------------------------------
+
+# Drop redundant variables, i.e. not needed for analysis 
+subdata_buurt_long = subset(subdata_buurt_long, select = -c(age_0t18, age_27t65, builtafter2000,
+                                                            newbuildings, netincome_delta, newbuildingsdelta,
+                                                            housing_soc_delta, GLdelta2010,
+                                                            GLdelta2014, PVDA_delta, housing_pub_delta, housing_pub_delta2005,
+                                                            housing_pub_delta2009))
+
+# Label variables
+var_lab(subdata_buurt_long$bc_code)               = "Neighbourhood identifier code"
+var_lab(subdata_buurt_long$bc_name)               = "Neighbourhood name"
+var_lab(subdata_buurt_long$PVDA)                  = "% PvdA vote"
+var_lab(subdata_buurt_long$GL)                    = "% GroenLinks vote"
+var_lab(subdata_buurt_long$MPP)                   = "% M+ vote"
+var_lab(subdata_buurt_long$DENK)                  = "% DENK vote"
+var_lab(subdata_buurt_long$BIJ1)                  = "% BIJ1 vote"
+var_lab(subdata_buurt_long$MCparties)             = "% Multicultural parties vote"
+var_lab(subdata_buurt_long$imm_Sur)               = "% Surinamese migration background"
+var_lab(subdata_buurt_long$imm_Ant)               = "% Antillean migration background"
+var_lab(subdata_buurt_long$imm_Tur)               = "% Turkish migration background"
+var_lab(subdata_buurt_long$imm_Mar)               = "% Moroccan migration background"
+var_lab(subdata_buurt_long$imm_otherNW)           = "% Other non-western migration background"
+var_lab(subdata_buurt_long$imm_W)                 = "% Western migration background"
+var_lab(subdata_buurt_long$imm_autoch)            = "% Autochthonous"
+var_lab(subdata_buurt_long$age_18t26)             = "% 18 to 26 year-olds"
+var_lab(subdata_buurt_long$age_15t64)             = "% 15 to 64 year-olds (potential labour force)"
+var_lab(subdata_buurt_long$age_66plus)            = "% 66 plus"
+var_lab(subdata_buurt_long$unempl)                = "% Unemployed"
+var_lab(subdata_buurt_long$edu_low)               = "% Lower educated"
+var_lab(subdata_buurt_long$edu_mid)               = "% Medium educated"
+var_lab(subdata_buurt_long$edu_high)              = "% Higher educated"
+var_lab(subdata_buurt_long$housing_soc)           = "% Social housing"
+var_lab(subdata_buurt_long$housing_pub)           = "% Corporation-owned (public) housing"
+var_lab(subdata_buurt_long$net_wijk_product)      = "Net income per neighbourhood"
+var_lab(subdata_buurt_long$households)            = "Number of households"
+var_lab(subdata_buurt_long$bc_combined)           = "Manually combined units"
+var_lab(subdata_buurt_long$netHHincome)           = "Net income per household (x1000)"
+var_lab(subdata_buurt_long$housing_soc_delta2005) = "∆ % Social housing since 2005"
+var_lab(subdata_buurt_long$housing_soc_delta2009) = "∆ % Social housing since 2009"
+var_lab(subdata_buurt_long$housing_soc_delta2013) = "∆ % Social housing since 2013"
+var_lab(subdata_buurt_long$housing_pub_delta2013) = "∆ % Corporation-owned (public) housing since 2013"
+var_lab(subdata_buurt_long$netincome_delta2005)  = "∆ Net income per household (x1000) since 2005"
+var_lab(subdata_buurt_long$netincome_delta2009)  = "∆ Net income per household (x1000) since 2009"
+var_lab(subdata_buurt_long$netincome_delta2013)  = "∆ Net income per household (x1000) since 2013"
+var_lab(subdata_buurt_long$PVDA_delta2006)        = "∆ % PvdA vote since 2005"
+var_lab(subdata_buurt_long$PVDA_delta2010)        = "∆ % PvdA vote since 2006"
+var_lab(subdata_buurt_long$PVDA_delta2014)        = "∆ % PvdA vote since 2013"
+var_lab(subdata_buurt_long$unempl)                = "% Recipients unemployment benefits"
+var_lab(subdata_buurt_long$turnout)               = "Turnout"
+var_lab(subdata_buurt_long$year)                  = "Year of observation for election data"
+var_lab(subdata_buurt_long$year_BCvars)           = "Year of observation for neighbourhood characteristics data"
+
+# Export revised data set
+saveRDS(subdata_buurt_long, "/Users/Maartje/Desktop/gentrification_data_long_revised.rds")
+write.csv(subdata_buurt_long,"/Users/Maartje/Desktop/gentrification_data_long_revised.csv", row.names = FALSE)
 

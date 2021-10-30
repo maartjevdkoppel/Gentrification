@@ -5,57 +5,74 @@
 # Data analysis
 # Last update: 29/10/21
 
-# Set-up ----------------------------------------------------------------------------------------------------- #
-rm(list=ls())
+# Set-up ------------------------------------------------------------------------------------------------------------ 
 
-library(raster)     # select only libraries used
-library(foreign) 
-library(tidyverse)
-library(ggplot2)
-library(readxl)
-library(dplyr)
-library(stats)
-library(tidyr)
-library(expss)
+# Clean environment
+  rm(list=ls())
 
-# Importing data --------------------------------------------------------------------------------------------- #
+# TO DO: elect only libraries used
+  library(raster)     
+  library(foreign) 
+  library(tidyverse)
+  library(ggplot2)
+  library(readxl)
+  library(dplyr)
+  library(stats)
+  library(tidyr)
+  library(expss)
 
-# TO DO: check whether data is correct
-  data <- read.csv("/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Analyses/data/data_sub_merged_long 2.csv", header=TRUE)
+# Import data -------------------------------------------------------------------------------------------------------
 
-# Label the variables
-  var_lab(data$PVDA) = "% PvdA vote"
-  var_lab(data$MPP)  = "% M+ vote"
-  var_lab(data$DENK) = "% DENK vote"
-  var_lab(data$BIJ1) = "% BIJ1 vote"
-  var_lab(data$MCparties) = "% Multicultural parties vote"
-  var_lab(data$imm_Sur) = "% Surinamese"
-  var_lab(data$imm_Ant) = "% Antillean"
-  var_lab(data$imm_Tur) = "% Turkish"
-  var_lab(data$imm_Mar) = "% Moroccan"
-  var_lab(data$imm_otherNW) = "% Other non-western immigrant"
-  var_lab(data$imm_W) = "% Western immigrant "
-  var_lab(data$imm_autoch) = "% Autochthonous"
-  var_lab(data$age_18t26) =  "% 0 to 18 year-olds"
-  var_lab(data$age_18t26) = "% 18 to 26 year-olds"
-  var_lab(data$age_66plus) = "% 66 plus"
-  var_lab(data$unempl) = "% Unemployed"
-  var_lab(data$edu_low) = "% Lower educated"
-  var_lab(data$edu_mid) = "% Medium educated"
-  var_lab(data$edu_hi) = "% Higher educated"
-  var_lab(data$housing_soc) =  "% Social housing"
-  var_lab(data$housing_soc_delta2005) = "∆ % Social housing since 2005"
-  var_lab(data$housing_soc_delta2009) = "∆ % Social housing since 2006"
-  var_lab(data$housing_soc_delta2013) = "∆ % Social housing since 2013"
-  var_lab(data$housing_soc_delta) = "∆ % Social housing (t-1)"
-  var_lab(data$housing_pub_delta) = "∆ % Public housing (t-1)"
-  var_lab(data$PVDA_delta2006) = "∆ % PvdA vote since 2005"
-  var_lab(data$PVDA_delta2010) = "∆ % PvdA vote since 2006"
-  var_lab(data$PVDA_delta2014) = "∆ % PvdA vote since 2013"
-  var_lab(data$PVDA_delta) = "∆ % PvdA vote since previous election"
-  var_lab(data$unempl) = "% Recipients unemployment benefits"
-  var_lab(data$turnout) = "Turnout"
+# Read data
+  fulldata <- readRDS("/Users/Maartje/Desktop/gentrification_data_long_revised.rds")
+  
+# Prepare data for analysis ----------------------------------------------------------------------------------------- 
+  
+# Subset to 2018 only
+  subdata <- fulldata[ which(fulldata$year=='2018'), ]
+  
+# Redefine categories for migration background
+  # Turkish, Moroccan, Surinamese & Antillean vs. other migration vs. no migration background
+  subdata$imm_TMSA  <- subdata$imm_Tur + subdata$imm_Mar + subdata$imm_Sur + subdata$imm_Ant
+  subdata$imm_other <- subdata$imm_otherNW + subdata$imm_W
+  
+  var_lab(subdata$imm_TMSA)  = "% Turkish, Moroccan, Surinamese or Antillean migration background"
+  var_lab(subdata$imm_other) = "% Other migration background"
+  
+# Check for missing data
+  varlist <- list('PVDA', 'DENK', 'BIJ1', 'imm_Sur', 'imm_Ant', 'imm_Tur', 'imm_Mar', 'imm_otherNW', 'imm_W',
+                  'age_18t26', 'age_66plus', 'edu_low', 'edu_high', 'housing_soc', 'housing_pub', 'unempl', 'netHHincome',
+                  'MCparties', 'turnout', 'netincome_delta2005', 'netincome_delta2009', 'netincome_delta2013',
+                  'housing_soc_delta2005','housing_soc_delta2009', 'housing_soc_delta2013', 'housing_pub_delta2013', 
+                  'imm_TMSA', 'imm_other')
+  
+  for (n in varlist){print(n)
+    print(summary(subdata[,n]))} 
+  # only substantive number of missings for the '% social housing' variable
+      # 2017:       13 NAs
+      # ∆2005-2017: 21 NAs
+      # ∆2009-2017: 18 NAs
+      # ∆2013-2017: 17 NAs
+   # due to dependency on survey data for these numbers;
+   # need at least 50 respondents in a neighbourhood
+
+# Check if neighbourhoods with missing data on social housing are significantly different
+  subdata$missing_housing_soc <- ifelse(is.na(subdata$housing_soc) | is.na(subdata$housing_soc_delta2005) |
+                                        is.na(subdata$housing_soc_delta2009) | is.na(subdata$housing_soc_delta2013), 1, 0)
+  fre(subdata$missing_housing_soc) # approx. 25% is missing on this variable 
+  
+# Check if manually combined neighbourhoods are significantly different
+  
 
 
+  
+# Assumption checks ------------------------------------------------------------------------------------------------- 
+
+# TO DO
+  # check whether manually combined neighbourhoods are significantly different from others
+    # t-tests on bc_combined and all other variables
+  # assumption checks for regression
+  # collinearity checks for gentrification indicators: can they be put in one model?
+  
 
 
