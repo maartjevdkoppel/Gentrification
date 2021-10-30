@@ -20,6 +20,8 @@
   library(stats)
   library(tidyr)
   library(expss)
+  library(mctest)
+install.packages("mctest")
 
 # Import data -------------------------------------------------------------------------------------------------------
 
@@ -98,9 +100,8 @@
   t.test(netincome_delta2005   ~ bc_combined, data = subdata, alternative = "two.sided") 
   t.test(netincome_delta2009   ~ bc_combined, data = subdata, alternative = "two.sided") 
   t.test(netincome_delta2013   ~ bc_combined, data = subdata, alternative = "two.sided") 
-  t.test(housing_soc_delta2005 ~ bc_combined, data = subdata, alternative = "two.sided") 
-  t.test(housing_soc_delta2009 ~ bc_combined, data = subdata, alternative = "two.sided")
-  t.test(housing_soc_delta2013 ~ bc_combined, data = subdata, alternative = "two.sided")   
+  t.test(housing_pub_delta2005 ~ bc_combined, data = subdata, alternative = "two.sided") 
+  t.test(housing_pub_delta2009 ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(housing_pub_delta2013 ~ bc_combined, data = subdata, alternative = "two.sided")   
    
   # On the control variables - no significant differences
@@ -114,23 +115,185 @@
   t.test(unempl      ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(netHHincome ~ bc_combined, data = subdata, alternative = "two.sided")
   
-# Check OLS regression assumptions ------------------------------------------------------------------------------------------------- 
+# Create separate databases, so observations with missings can be removed
+  # For all three gentrification options: 4, 8 and 12 years change
+  # For all three dependent variables
+  
+  # PVDA option 1: gentrification over 4 years
+  data.pvda.op1 <- select(subdata, c(bc_code, bc_name, PVDA, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                     edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                     housing_pub_delta2013, netincome_delta2013))
+  data.pvda.op1 <- data.pvda.op1[complete.cases(data.pvda.op1),] # 1 observation deleted
+  
+  # PVDA option 2: gentrification over 8 years
+  data.pvda.op2 <- select(subdata, c(bc_code, bc_name, PVDA, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                     edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                     housing_pub_delta2009, netincome_delta2009))
+  data.pvda.op2 <- data.pvda.op2[complete.cases(data.pvda.op2),] # 1 observation deleted
+  
+  # PVDA option 3: gentrification over 12 years
+  data.pvda.op3 <- select(subdata, c(bc_code, bc_name, PVDA, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                     edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                     housing_pub_delta2005, netincome_delta2005))
+  data.pvda.op3 <- data.pvda.op3[complete.cases(data.pvda.op3),] # 2 observations deleted
+  
+  # MC parties option 1: gentrification over 4 years
+  data.mc.op1 <- select(subdata, c(bc_code, bc_name, MCparties, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                     edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                     housing_pub_delta2013, netincome_delta2013))
+  data.mc.op1 <- data.mc.op1[complete.cases(data.mc.op1),] # 1 observation deleted
+  
+  # MC parties option 2: gentrification over 8 years
+  data.mc.op2 <- select(subdata, c(bc_code, bc_name, MCparties, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                   edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                   housing_pub_delta2009, netincome_delta2009))
+  data.mc.op2 <- data.mc.op2[complete.cases(data.mc.op2),] # 1 observation deleted
+  
+  # MC parties option 3: gentrification over 12 years
+  data.mc.op3 <- select(subdata, c(bc_code, bc_name, MCparties, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                   edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                   housing_pub_delta2005, netincome_delta2005))
+  data.mc.op3 <- data.mc.op3[complete.cases(data.mc.op3),] # 2 observations deleted
+  
+  # Turnout option 1: gentrification over 4 years
+  data.turn.op1 <- select(subdata, c(bc_code, bc_name, turnout, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                   edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                   housing_pub_delta2013, netincome_delta2013))
+  data.turn.op1 <- data.turn.op1[complete.cases(data.turn.op1),] # 1 observation deleted
+  
+  # Turnout option 2: gentrification over 8 years
+  data.turn.op2 <- select(subdata, c(bc_code, bc_name, turnout, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                     edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                     housing_pub_delta2009, netincome_delta2009))
+  data.turn.op2 <- data.turn.op2[complete.cases(data.turn.op2),] # 1 observation deleted
+  
+  # Turnout option 3: gentrification over 12 years
+  data.turn.op3 <- select(subdata, c(bc_code, bc_name, turnout, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                     edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                     housing_pub_delta2005, netincome_delta2005))
+  data.turn.op3 <- data.turn.op3[complete.cases(data.turn.op3),] # 2 observations deleted
 
-  # Typically, for each of the independent variables (predictors), the following plots are drawn to visualize the following behavior:
-    # Scatter plot: Visualize the linear relationship between the predictor and response
-    # Box plot: To spot any outlier observations in the variable. Having outliers in your predictor can drastically affect the predictions as they can easily affect the direction/slope of the line of best fit.
-    # Density plot: To see the distribution of the predictor variable. Ideally, a close to normal distribution (a bell shaped curve), without being skewed to the left or right is preferred. Let us see how to make each one of them.
+  
+# Analysis: PVDA ------------------------------------------------------------------------------------------------- 
+
+# OPTION 1 - Gentrification as change over 4 years (2013-2017)
+  # Model 1: composition effects
+  pvda.op1.m1 <- lm(PVDA ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                    data = data.pvda.op1)
+  summary (pvda.op1.m1)
+  # Model 2: add gentrification (change variables)
+  pvda.op1.m2 <- lm(PVDA ~ housing_pub + netHHincome
+                   + imm_TMSA + imm_other +
+                   + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                   + housing_pub_delta2013 + netincome_delta2013, 
+                   data = data.pvda.op1)
+  summary (pvda.op1.m2)
+  # Model 3: interaction effect
+  pvda.op1.m2 <- lm(PVDA ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2013 + netincome_delta2013,
+                    ## add interactions
+                    data = data.pvda.op1)
+  summary (pvda.op1.m3)
+  
+# OPTION 2 - Gentrification as change over 8 years (2009-2017)
+  # Model 1: composition effects
+  pvda.op2.m1 <- lm(PVDA ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                    data = data.pvda.op2)
+  summary(pvda.op2.m1)
+  # Model 2: add gentrification (change variables)
+  pvda.op2.m2 <- lm(PVDA ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2009 + netincome_delta2009, 
+                    data = data.pvda.op2)
+  summary(pvda.op2.m2)
+  # Model 3: interaction effect
+  pvda.op2.m3 <-
+      
+# OPTION 3 - Gentrification as change over 12 years (2005-2017)
+  # Model 1: composition effects
+  pvda.op3.m1 <- lm(PVDA ~ housing_pub + netHHincome
+                      + imm_TMSA + imm_other +
+                      + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                      data = data.pvda.op3)
+  summary(pvda.op3.m1)
+  # Model 2: add gentrification (change variables)
+  pvda.op3.m2 <- lm(PVDA ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2005 + netincome_delta2005, 
+                    data = data.pvda.op3)
+  summary(pvda.op3.m2)
+  # Model 3: interaction effect
+  pvda.op3.m3 <-
   
   
+# Analysis: MC parties ------------------------------------------------------------------------------------------------- 
   
-# TO DO
+  # TO DO: remove observations with missings on the main repredictors 
+  
+# OPTION 1 - Gentrification as change over 4 years (2013-2017)
+  # Model 1: composition effects
+  
+  # Model 2: add gentrification (change variables)
+  # Model 3: interaction effect
+  
+# OPTION 2 - Gentrification as change over 8 years (2009-2017)
+  # Model 1: composition effects
+  # Model 2: add gentrification (change variables)
+  # Model 3: interaction effect
+  
+# OPTION 3 - Gentrification as change over 12 years (2005-2017)
+  # Model 1: composition effects
+  # Model 2: add gentrification (change variables)
+  # Model 3: interaction effect
+  
+  
+# Analysis: Turnout ------------------------------------------------------------------------------------------------- 
+  
+  # TO DO: remove observations with missings on the main repredictors 
+  
+# OPTION 1 - Gentrification as change over 4 years (2013-2017)
+  # Model 1: composition effects
+  
+  # Model 2: add gentrification (change variables)
+  # Model 3: interaction effect
+  
+# OPTION 2 - Gentrification as change over 8 years (2009-2017)
+  # Model 1: composition effects
+  # Model 2: add gentrification (change variables)
+  # Model 3: interaction effect
+  
+# OPTION 3 - Gentrification as change over 12 years (2005-2017)
+  # Model 1: composition effects
+  # Model 2: add gentrification (change variables)
+  # Model 3: interaction effect
+  
+  
+# Check OLS regression assumptions ------------------------------------------------------------------------------------------------- 
+  
+  # TO DO
   # assumption checks for regression
   # collinearity checks for gentrification indicators: can they be put in one model?
   
-
-# Analysis ------------------------------------------------------------------------------------------------- 
-
-  # TO DO: remove observations with missings on the main repredictors 
-  # Especially important for social housing models!
+  # SEE:
+    # http://r-statistics.co/Linear-Regression.html
+    # https://www.scribbr.com/statistics/multiple-linear-regression/
+  
+  
+  # Typically, for each of the independent variables (predictors), the following plots are drawn to visualize the following behavior:
+  # Scatter plot: Visualize the linear relationship between the predictor and response
+  # Box plot: To spot any outlier observations in the variable. Having outliers in your predictor can drastically affect the predictions as they can easily affect the direction/slope of the line of best fit.
+  # Density plot: To see the distribution of the predictor variable. Ideally, a close to normal distribution (a bell shaped curve), without being skewed to the left or right is preferred. Let us see how to make each one of them.
+  
+  
+  
+ 
   
   
