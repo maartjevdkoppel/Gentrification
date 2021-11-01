@@ -22,6 +22,7 @@
   library(expss)
   library(mctest)
   library(texreg)
+  library(emmeans)
 
 
 # Import data -------------------------------------------------------------------------------------------------------
@@ -206,8 +207,25 @@
   summary(pvda.op1.m3)
   
   # Export regression table
-  wordreg(l = list(pvda.op1.m1, pvda.op1.m2, pvda.op1.m3), file = "/Desktop/pvda_op1.doc", 
+  wordreg(l = list(pvda.op1.m1, pvda.op1.m2, pvda.op1.m3), file = "/Desktop/pvda_gentr_4years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  pvda.op1.preddata <- with(data.pvda.op1, list(imm_TMSA = seq(5,55,25), housing_pub_delta2013 = seq(-25,10,1), 
+                                                      housing_pub=mean(housing_pub),
+                                                      netHHincome=mean(netHHincome),
+                                                      imm_other  =mean(imm_other),
+                                                      edu_low    =mean(edu_low),
+                                                      edu_high   =mean(edu_high),
+                                                      age_18t26  =mean(age_18t26),
+                                                      age_66plus =mean(age_66plus),
+                                                      unempl     =mean(unempl),
+                                                      netincome_delta2013=mean(netincome_delta2013)))
+  jpeg("/Users/Maartje/Desktop/pvda_4years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(pvda.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=pvda.op1.preddata, CIs=TRUE)
+  dev.off()
+  
+  # TO DO: predicted probs plot for delta net income 
   
 # OPTION 2 - Gentrification as change over 8 years (2009-2017)
   # Model 1: composition effects
@@ -226,10 +244,33 @@
   summary(pvda.op2.m2)
   
   # Model 3: interaction effect
-  pvda.op2.m3 <-
-    
+  pvda.op2.m3 <- lm(PVDA ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                      + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2009 + netincome_delta2009
+                    + housing_pub_delta2009:imm_TMSA + netincome_delta2009:imm_TMSA, 
+                    data = data.pvda.op2)
+  summary(pvda.op2.m3)  
+  
   # Export regression table
-      
+  wordreg(l = list(pvda.op2.m1, pvda.op2.m2, pvda.op2.m3), file = "/Desktop/pvda_gentr_8years.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  pvda.op2.preddata <- with(data.pvda.op2, list(imm_TMSA = seq(5,55,25), housing_pub_delta2009 = seq(-25,10,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                netincome_delta2009=mean(netincome_delta2009)))
+  jpeg("/Users/Maartje/Desktop/pvda_8years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(pvda.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=pvda.op2.preddata, CIs=TRUE)
+  dev.off()
+  
 # OPTION 3 - Gentrification as change over 12 years (2005-2017)
   # Model 1: composition effects
   pvda.op3.m1 <- lm(PVDA ~ housing_pub + netHHincome
@@ -247,51 +288,302 @@
   summary(pvda.op3.m2)
   
   # Model 3: interaction effect
-  pvda.op3.m3 <-
+  pvda.op3.m3 <- lm(PVDA ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2005 + netincome_delta2005
+                    + housing_pub_delta2005:imm_TMSA + netincome_delta2005:imm_TMSA,
+                    data = data.pvda.op3)
+  summary(pvda.op3.m3)
   
   # Export regression table
+  wordreg(l = list(pvda.op3.m1, pvda.op3.m2, pvda.op3.m3), file = "/Desktop/pvda_gentr_12years.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  pvda.op3.preddata <- with(data.pvda.op3, list(imm_TMSA = seq(5,55,25), housing_pub_delta2005 = seq(-25,10,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                netincome_delta2005=mean(netincome_delta2005)))
+  jpeg("/Users/Maartje/Desktop/pvda_12years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(pvda.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=pvda.op3.preddata, CIs=TRUE)
+  dev.off()
   
 # Analysis: MC parties ------------------------------------------------------------------------------------------------- 
   
-  # TO DO: remove observations with missings on the main repredictors 
-  
 # OPTION 1 - Gentrification as change over 4 years (2013-2017)
   # Model 1: composition effects
+  mc.op1.m1 <- lm(MCparties ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                    data = data.mc.op1)
+  summary(mc.op1.m1)
   
   # Model 2: add gentrification (change variables)
-  # Model 3: interaction effect
+  mc.op1.m2 <- lm(MCparties ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                  + housing_pub_delta2013 + netincome_delta2013, 
+                  data = data.mc.op1)
+  summary(mc.op1.m2)  
   
+  # Model 3: interaction effect
+  mc.op1.m3 <- lm(MCparties ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                  + housing_pub_delta2013 + netincome_delta2013
+                  + housing_pub_delta2013:imm_TMSA + netincome_delta2013:imm_TMSA, 
+                  data = data.mc.op1)
+  summary(mc.op1.m3)
+  
+  # Export regression table
+  wordreg(l = list(mc.op1.m1, mc.op1.m2, mc.op1.m3), file = "/Desktop/mcparties_gentr_4years.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  mc.op1.preddata <- with(data.mc.op1, list(imm_TMSA = seq(5,55,25), housing_pub_delta2013 = seq(-25,10,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                netincome_delta2013=mean(netincome_delta2013)))
+  jpeg("/Users/Maartje/Desktop/mcparties_4years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(mc.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=mc.op1.preddata, CIs=TRUE)
+  dev.off()
+  
+
 # OPTION 2 - Gentrification as change over 8 years (2009-2017)
   # Model 1: composition effects
+  mc.op2.m1 <- lm(MCparties ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                  data = data.mc.op2)
+  summary(mc.op2.m1)
+  
   # Model 2: add gentrification (change variables)
+  mc.op2.m2 <- lm(MCparties ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                  + housing_pub_delta2009 + netincome_delta2009, 
+                  data = data.mc.op2)
+  summary(mc.op2.m2)  
+  
   # Model 3: interaction effect
+  mc.op2.m3 <- lm(MCparties ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                  + housing_pub_delta2009 + netincome_delta2009
+                  + housing_pub_delta2009:imm_TMSA + netincome_delta2009:imm_TMSA, 
+                  data = data.mc.op2)
+  summary(mc.op2.m3)
+  
+  # Export regression table
+  wordreg(l = list(mc.op2.m1, mc.op2.m2, mc.op2.m3), file = "/Desktop/mcparties_gentr_8years.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  mc.op2.preddata <- with(data.mc.op2, list(imm_TMSA = seq(5,55,25), housing_pub_delta2009 = seq(-25,10,1), 
+                                            housing_pub=mean(housing_pub),
+                                            netHHincome=mean(netHHincome),
+                                            imm_other  =mean(imm_other),
+                                            edu_low    =mean(edu_low),
+                                            edu_high   =mean(edu_high),
+                                            age_18t26  =mean(age_18t26),
+                                            age_66plus =mean(age_66plus),
+                                            unempl     =mean(unempl),
+                                            netincome_delta2009=mean(netincome_delta2009)))
+  jpeg("/Users/Maartje/Desktop/mcparties_8years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(mc.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=mc.op2.preddata, CIs=TRUE)
+  dev.off()
   
 # OPTION 3 - Gentrification as change over 12 years (2005-2017)
   # Model 1: composition effects
+  mc.op3.m1 <- lm(MCparties ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                  data = data.mc.op3)
+  summary(mc.op3.m1)
+  
   # Model 2: add gentrification (change variables)
+  mc.op3.m2 <- lm(MCparties ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                  + housing_pub_delta2005 + netincome_delta2005, 
+                  data = data.mc.op3)
+  summary(mc.op3.m2)  
+  
   # Model 3: interaction effect
+  mc.op3.m3 <- lm(MCparties ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                  + housing_pub_delta2005 + netincome_delta2005
+                  + housing_pub_delta2005:imm_TMSA + netincome_delta2005:imm_TMSA, 
+                  data = data.mc.op3)
+  summary(mc.op3.m3)
+  
+  # Export regression table
+  wordreg(l = list(mc.op3.m1, mc.op3.m2, mc.op3.m3), file = "/Desktop/mcparties_gentr_12years.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  mc.op3.preddata <- with(data.mc.op3, list(imm_TMSA = seq(5,55,25), housing_pub_delta2005 = seq(-25,10,1), 
+                                            housing_pub=mean(housing_pub),
+                                            netHHincome=mean(netHHincome),
+                                            imm_other  =mean(imm_other),
+                                            edu_low    =mean(edu_low),
+                                            edu_high   =mean(edu_high),
+                                            age_18t26  =mean(age_18t26),
+                                            age_66plus =mean(age_66plus),
+                                            unempl     =mean(unempl),
+                                            netincome_delta2005=mean(netincome_delta2005)))
+  jpeg("/Users/Maartje/Desktop/mcparties_12years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(mc.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=mc.op3.preddata, CIs=TRUE)
+  dev.off()
   
   
 # Analysis: Turnout ------------------------------------------------------------------------------------------------- 
   
-  # TO DO: remove observations with missings on the main repredictors 
-  
 # OPTION 1 - Gentrification as change over 4 years (2013-2017)
   # Model 1: composition effects
+  turn.op1.m1 <- lm(turnout ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                  + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                  data = data.turn.op1)
+  summary(turn.op1.m1)
   
   # Model 2: add gentrification (change variables)
+  turn.op1.m2 <- lm(turnout ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2013 + netincome_delta2013, 
+                    data = data.turn.op1)
+  summary(turn.op1.m2)
+  
   # Model 3: interaction effect
+  turn.op1.m3 <- lm(turnout ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2013 + netincome_delta2013
+                    + housing_pub_delta2013:imm_TMSA + netincome_delta2013:imm_TMSA, 
+                    data = data.turn.op1)
+  summary(turn.op1.m3)
+  
+  # Export regression table
+  wordreg(l = list(turn.op1.m1, turn.op1.m2, turn.op1.m3), file = "/Desktop/turnout_gentr_4years.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  turn.op1.preddata <- with(data.turn.op1, list(imm_TMSA = seq(5,55,25), housing_pub_delta2013 = seq(-25,10,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                netincome_delta2013=mean(netincome_delta2013)))
+  jpeg("/Users/Maartje/Desktop/turnout_4years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(turn.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=turn.op1.preddata, CIs=TRUE)
+  dev.off()
   
 # OPTION 2 - Gentrification as change over 8 years (2009-2017)
   # Model 1: composition effects
+  turn.op2.m1 <- lm(turnout ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                      + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                    data = data.turn.op2)
+  summary(turn.op2.m1)
+  
   # Model 2: add gentrification (change variables)
+  turn.op2.m2 <- lm(turnout ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                      + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2009 + netincome_delta2009, 
+                    data = data.turn.op2)
+  summary(turn.op2.m2)
+  
   # Model 3: interaction effect
+  turn.op2.m3 <- lm(turnout ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2009 + netincome_delta2009
+                    + housing_pub_delta2009:imm_TMSA + netincome_delta2009:imm_TMSA, 
+                    data = data.turn.op2)
+  summary(turn.op2.m3)
+  
+  # Export regression table
+  wordreg(l = list(turn.op2.m1, turn.op2.m2, turn.op2.m3), file = "/Desktop/turnout_gentr_8years.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  turn.op2.preddata <- with(data.turn.op2, list(imm_TMSA = seq(5,55,25), housing_pub_delta2009 = seq(-25,10,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                netincome_delta2009=mean(netincome_delta2009)))
+  jpeg("/Users/Maartje/Desktop/turnout_8years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(turn.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=turn.op2.preddata, CIs=TRUE)
+  dev.off()
   
 # OPTION 3 - Gentrification as change over 12 years (2005-2017)
   # Model 1: composition effects
-  # Model 2: add gentrification (change variables)
-  # Model 3: interaction effect
+  turn.op3.m1 <- lm(turnout ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                      + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                    data = data.turn.op3)
+  summary(turn.op3.m1)
   
+  # Model 2: add gentrification (change variables)
+  turn.op3.m2 <- lm(turnout ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                      + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2005 + netincome_delta2005, 
+                    data = data.turn.op3)
+  summary(turn.op3.m2)
+  
+  # Model 3: interaction effect
+  turn.op3.m3 <- lm(turnout ~ housing_pub + netHHincome
+                    + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                    + housing_pub_delta2005 + netincome_delta2005
+                    + housing_pub_delta2005:imm_TMSA + netincome_delta2005:imm_TMSA, 
+                    data = data.turn.op3)
+  summary(turn.op3.m3)
+  
+  # Export regression table
+  wordreg(l = list(turn.op3.m1, turn.op3.m2, turn.op3.m3), file = "/Desktop/turnout_gentr_12years.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  
+  # Predicted probabilities plot
+  turn.op3.preddata <- with(data.turn.op3, list(imm_TMSA = seq(5,55,25), housing_pub_delta2005 = seq(-25,10,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                netincome_delta2005=mean(netincome_delta2005)))
+  jpeg("/Users/Maartje/Desktop/turnout_12years_pubhousing_plot.jpg", width = 500, height = 500)
+  emmip(turn.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=turn.op3.preddata, CIs=TRUE)
+  dev.off()
   
 # Check OLS regression assumptions ------------------------------------------------------------------------------------------------- 
   
