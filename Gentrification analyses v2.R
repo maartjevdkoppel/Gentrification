@@ -21,7 +21,8 @@
   library(tidyr)
   library(expss)
   library(mctest)
-install.packages("mctest")
+  library(texreg)
+
 
 # Import data -------------------------------------------------------------------------------------------------------
 
@@ -176,28 +177,37 @@ install.packages("mctest")
   
 # Analysis: PVDA ------------------------------------------------------------------------------------------------- 
 
+# FOR EXPORTING TABLE
+# SEE https://cran.r-project.org/web/packages/jtools/vignettes/summ.html#Table_output_for_Word_and_RMarkdown_documents
+  
 # OPTION 1 - Gentrification as change over 4 years (2013-2017)
   # Model 1: composition effects
   pvda.op1.m1 <- lm(PVDA ~ housing_pub + netHHincome
                     + imm_TMSA + imm_other +
                     + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                     data = data.pvda.op1)
-  summary (pvda.op1.m1)
+  summary(pvda.op1.m1)
+  
   # Model 2: add gentrification (change variables)
   pvda.op1.m2 <- lm(PVDA ~ housing_pub + netHHincome
                    + imm_TMSA + imm_other +
                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
                    + housing_pub_delta2013 + netincome_delta2013, 
                    data = data.pvda.op1)
-  summary (pvda.op1.m2)
+  summary(pvda.op1.m2)
+  
   # Model 3: interaction effect
-  pvda.op1.m2 <- lm(PVDA ~ housing_pub + netHHincome
+  pvda.op1.m3 <- lm(PVDA ~ housing_pub + netHHincome
                     + imm_TMSA + imm_other +
                     + edu_low + edu_high + age_18t26 + age_66plus + unempl
-                    + housing_pub_delta2013 + netincome_delta2013,
-                    ## add interactions
+                    + housing_pub_delta2013 + netincome_delta2013
+                    + housing_pub_delta2013:imm_TMSA + netincome_delta2013:imm_TMSA,
                     data = data.pvda.op1)
-  summary (pvda.op1.m3)
+  summary(pvda.op1.m3)
+  
+  # Export regression table
+  wordreg(l = list(pvda.op1.m1, pvda.op1.m2, pvda.op1.m3), file = "/Desktop/pvda_op1.doc", 
+          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
 # OPTION 2 - Gentrification as change over 8 years (2009-2017)
   # Model 1: composition effects
@@ -206,6 +216,7 @@ install.packages("mctest")
                     + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                     data = data.pvda.op2)
   summary(pvda.op2.m1)
+  
   # Model 2: add gentrification (change variables)
   pvda.op2.m2 <- lm(PVDA ~ housing_pub + netHHincome
                     + imm_TMSA + imm_other +
@@ -213,8 +224,11 @@ install.packages("mctest")
                     + housing_pub_delta2009 + netincome_delta2009, 
                     data = data.pvda.op2)
   summary(pvda.op2.m2)
+  
   # Model 3: interaction effect
   pvda.op2.m3 <-
+    
+  # Export regression table
       
 # OPTION 3 - Gentrification as change over 12 years (2005-2017)
   # Model 1: composition effects
@@ -223,6 +237,7 @@ install.packages("mctest")
                       + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                       data = data.pvda.op3)
   summary(pvda.op3.m1)
+  
   # Model 2: add gentrification (change variables)
   pvda.op3.m2 <- lm(PVDA ~ housing_pub + netHHincome
                     + imm_TMSA + imm_other +
@@ -230,9 +245,11 @@ install.packages("mctest")
                     + housing_pub_delta2005 + netincome_delta2005, 
                     data = data.pvda.op3)
   summary(pvda.op3.m2)
+  
   # Model 3: interaction effect
   pvda.op3.m3 <-
   
+  # Export regression table
   
 # Analysis: MC parties ------------------------------------------------------------------------------------------------- 
   
