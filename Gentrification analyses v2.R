@@ -23,7 +23,8 @@
   library(mctest)
   library(texreg)
   library(emmeans)
-
+  library(sf)
+  library(RColorBrewer)
 
 # Import data -------------------------------------------------------------------------------------------------------
 
@@ -174,6 +175,118 @@
                                      edu_low, edu_high, age_18t26, age_66plus, unempl,
                                      housing_pub_delta2005, netincome_delta2005))
   data.turn.op3 <- data.turn.op3[complete.cases(data.turn.op3),] # 2 observations deleted
+
+# Descriptives: visualisation gentrification ---------------------------------------------------------------------
+  
+# Import shapefile for neighbourhoods (based on 2015 bc code)
+  geodata <- st_read("/Users/Maartje/Desktop/LJA/Data POLetmaal/Kaarten/bc2015def_region.shp")
+  geodata <- geodata %>% rename(bc_code = BC2015) 
+  geodata <- geodata %>% rename(bc_naam = NAAM) 
+  
+# Merge neighbourhoods: combine neighbourhoods 
+  
+  # Rename all neighbourhoods to be merged
+  # Specify renaming function
+  rename.bc <- function(x, condition, code, name){
+    x$bc_code <- ifelse(condition, code, x$bc_code) # change BC code
+    x$bc_naam <- ifelse(condition, name, x$bc_naam) # change BC name
+    x
+  }
+  
+  # De Krommert: Chassébuurt + Geuzenbuurt
+  condition     <- geodata$bc_naam == "De Krommert" | geodata$bc_naam == "Chassébuurt" | geodata$bc_naam == "Geuzenbuurt"
+  geodata <- rename.bc(geodata, condition, "E40+E75", "De Krommert: Chassébuurt + Geuzenbuurt")
+  
+  # Diamantbuurt/Zuid Pijp
+  condition     <- geodata$bc_naam == "Diamantbuurt" | geodata$bc_naam == "Zuid Pijp"
+  geodata <- rename.bc(geodata, condition, "K26", "Diamantbuurt/Zuid Pijp")
+  
+  # Museumkwartier + Duivelseiland 
+  ## LET OP: geodata$bc_code == "K47" toegevoegd in poging probleem op te lossen
+  condition     <- geodata$bc_naam == "Duivelseiland" | geodata$bc_naam == "Museumkwartier" | geodata$bc_naam == "Museumkwartier + Duivelseiland" | geodata$bc_code == "K50" | geodata$bc_code == "K47"
+  geodata <- rename.bc(geodata, condition, "K47+K50", "Museumkwartier + Duivelseiland")
+  
+  # Buikslotermeer + Elzenhagen
+  condition     <- geodata$bc_naam == "Elzenhagen" | geodata$bc_naam == "Buikslotermeer"
+  geodata <- rename.bc(geodata, condition, "N69+N74", "Buikslotermeer + Elzenhagen")
+  
+  # Frankendael + De Omval/Overamstel
+  condition     <- geodata$bc_naam == "Frankendael" | geodata$bc_naam == "Frankendael + De Omval" | geodata$bc_naam == "De Omval" | geodata$bc_naam == "Omval/Overamstel"
+  geodata <- rename.bc(geodata, condition, "M55+M58", "Frankendael + De Omval/Overamstel")
+  
+  # IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost
+  condition     <- geodata$bc_naam == "IJburg West" | geodata$bc_naam == "IJburg West + Zeeburgereiland/Nieuwe Diep" | geodata$bc_naam == "Indische Buurt Oost" | geodata$bc_naam == "Indische Buurt Oost + Zeeburgereiland/Nieuwe Diep" | geodata$bc_naam == "Zeeburgereiland/Nieuwe Diep"
+  geodata <- rename.bc(geodata, condition, "M32+M34+M35", "IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost")
+  
+  # IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost
+  condition     <- geodata$bc_naam == "IJplein/Vogelbuurt + Nieuwendammerham" | geodata$bc_naam == "IJplein/Vogelbuurt + Noordelijke IJ-oevers Oost" | geodata$bc_code == "N61" | geodata$bc_code == "N72"
+  geodata <- rename.bc(geodata, condition, "N61+N72", "IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost")
+  
+  # Middelveldsche Akerpolder/Sloten
+  condition     <- geodata$bc_naam == "Middelveldsche Akerpolder" | geodata$bc_naam == "Middelveldsche Akerpolder/Sloten"
+  geodata <- rename.bc(geodata, condition, "F84", "Middelveldsche Akerpolder/Sloten")
+  
+  # Nieuwendam-Noord/Waterlandpleinbuurt
+  condition     <- geodata$bc_naam == "Nieuwendam-Noord" | geodata$bc_naam == "Waterlandpleinbuurt"
+  geodata <- rename.bc(geodata, condition, "N68", "Nieuwendam-Noord/Waterlandpleinbuurt")
+  
+  # Prinses Irenebuurt e.o./Station Zuid/WTC e.o.
+  condition     <- geodata$bc_naam == "Prinses Irenebuurt e.o." | geodata$bc_naam == "Station Zuid/WTC e.o."
+  geodata <- rename.bc(geodata, condition, "K59", "Prinses Irenebuurt e.o./Station Zuid/WTC e.o.")
+  
+  # Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk
+  condition     <- geodata$bc_naam == "Slotermeer-Noordoost" | geodata$bc_naam == "Slotermeer-Noordoost + Spieringhorn" | geodata$bc_naam == "Westelijk Havengebied + Bedrijventerrein Sloterdijk" | geodata$bc_code == "B10" | geodata$bc_code == "F11" | geodata$bc_code == "B11" | geodata$bc_code == "F75"
+  geodata <- rename.bc(geodata, condition, "F76+F75+B10+F11", "Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk")
+  
+  # Slotervaart: Slotervaart Noord + Slotervaart Zuid
+  condition     <- geodata$bc_naam == "Slotervaart" | geodata$bc_naam == "Slotervaart Noord" | geodata$bc_naam == "Slotervaart Zuid"
+  geodata <- rename.bc(geodata, condition, "F85+F89", "Slotervaart: Slotervaart Noord + Slotervaart Zuid")
+  
+  # Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West
+  condition     <- geodata$bc_naam == "Volewijck + Buiksloterham" | geodata$bc_naam == "Volewijck + Noordelijke IJ-oevers West" | geodata$bc_code == "N60" | geodata$bc_code == "N71"
+  geodata <- rename.bc(geodata, condition, "N60+N71", "Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West")
+  
+  # Following neighbourhoods were consistent in vote share data, but failed to merge with the neighbourhood characteristics data (e.g. not in neighbourhood data as a combined code)
+  # Spaarndammer- en Zeeheldenbuurt + Houthavens
+  condition     <- geodata$bc_code == "E12" | geodata$bc_code == "E13" | geodata$bc_code == "E13+E12"
+  geodata <- rename.bc(geodata, condition, "E13+12", "Spaarndammer- en Zeeheldenbuurt + Houthavens")
+  
+  # Landlust + Sloterdijk
+  condition     <- geodata$bc_code == "E36" | geodata$bc_code == "E37" | geodata$bc_code == "E37+E36"
+  geodata <- rename.bc(geodata, condition, "E37+E36", "Landlust + Sloterdijk") 
+  
+  # Tuindorp Buiksloot + Nieuwendammerdijk/Buiksloterdijk
+  condition     <- geodata$bc_code == "N63+N64" | geodata$bc_code == "N63" | geodata$bc_code == "N64"
+  geodata <- rename.bc(geodata, condition, "N63+N64", "Tuindorp Buiksloot + Nieuwendammerdijk/Buiksloterdijk")
+  
+  # Holendrecht/Reigersbos + Amstel III/Bullewijk
+  condition     <- geodata$bc_code == "T96+T92" | geodata$bc_code == "T96" | geodata$bc_code == "T92"
+  geodata <- rename.bc(geodata, condition, "T96+T92", "Holendrecht/Reigersbos + Amstel III/Bullewijk")
+
+# Combine geodata with characteristics
+  geosubdata <- merge(geodata, subdata, by="bc_code")  
+
+# Plot change in public housing (4 year period)  
+    
+  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+  geosubdata_housingpub  <- subset(geosubdata, select=c(housing_pub_delta2013, geometry, bc_code))
+    
+  # Merge areas for combined neighbourhoods 
+  geosubdata_housingpub <- aggregate(geosubdata_housingpub[,1:2], by=list(geosubdata_housingpub$bc_code), do_union = TRUE, FUN=mean)
+  geosubdata_housingpub <- subset(geosubdata_housingpub, select=-c(Group.1))
+    
+  # Make the map
+  palette <- c("#54278F", "#756BB1", "#9E9AC8", "#CBC9E2", "#F2F0F7","#A1D99B", "#31A354")
+  png("/Users/Maartje/Desktop/pubhousing_map_4years.png", width=600, height=600)
+  plot(geosubdata_housingpub, main="Change in corporation-owned (public) housing (2014-2018)", pal=palette) #TO DO: check neighbourhoods with missing data: which are they?
+  dev.off()
+  
+# TO DO  
+# Plot change in public housing (8 year period)   
+# Plot change in public housing (12 year period)
+# Plot change in net household income (4 year period)
+# Plot change in net household income (8 year period)   
+# Plot change in net household income (12 year period) 
 
   
 # Analysis: PVDA ------------------------------------------------------------------------------------------------- 
@@ -601,7 +714,8 @@
   # Box plot: To spot any outlier observations in the variable. Having outliers in your predictor can drastically affect the predictions as they can easily affect the direction/slope of the line of best fit.
   # Density plot: To see the distribution of the predictor variable. Ideally, a close to normal distribution (a bell shaped curve), without being skewed to the left or right is preferred. Let us see how to make each one of them.
   
-  
+
+
   
  
   
