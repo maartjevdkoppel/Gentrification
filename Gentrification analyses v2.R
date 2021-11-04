@@ -269,24 +269,96 @@
 # Plot change in public housing (4 year period)  
     
   # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
-  geosubdata_housingpub  <- subset(geosubdata, select=c(housing_pub_delta2013, geometry, bc_code))
+  geosubdata_housingpub2013  <- subset(geosubdata, select=c(housing_pub_delta2013, geometry, bc_code))
     
   # Merge areas for combined neighbourhoods 
-  geosubdata_housingpub <- aggregate(geosubdata_housingpub[,1:2], by=list(geosubdata_housingpub$bc_code), do_union = TRUE, FUN=mean)
-  geosubdata_housingpub <- subset(geosubdata_housingpub, select=-c(Group.1))
+  geosubdata_housingpub2013 <- aggregate(geosubdata_housingpub2013[,1:2], by=list(geosubdata_housingpub2013$bc_code), do_union = TRUE, FUN=mean)
+  geosubdata_housingpub2013 <- subset(geosubdata_housingpub2013, select=-c(Group.1))
     
   # Make the map
-  palette <- c("#54278F", "#756BB1", "#9E9AC8", "#CBC9E2", "#F2F0F7","#A1D99B", "#31A354")
+  palette1 <- c("#54278F", "#756BB1", "#9E9AC8", "#CBC9E2", "#F2F0F7","#A1D99B", "#31A354") # Set custom colour schemes 
+  palette2 <- c("#084594", "#2171B5", "#4292C6", "#6BAED6", "#9ECAE1", "#FC9272", "#FB6A4A")
+  
   png("/Users/Maartje/Desktop/pubhousing_map_4years.png", width=600, height=600)
-  plot(geosubdata_housingpub, main="Change in corporation-owned (public) housing (2014-2018)", pal=palette) #TO DO: check neighbourhoods with missing data: which are they?
+  plot(geosubdata_housingpub2013, main="Change in corporation-owned (public) housing (2013-2017)", pal=palette2) #TO DO: check neighbourhoods with missing data: which are they?
+  dev.off()
+
+# Plot change in public housing (8 year period)  
+  
+  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+  geosubdata_housingpub2009  <- subset(geosubdata, select=c(housing_pub_delta2009, geometry, bc_code))
+  
+  # Merge areas for combined neighbourhoods 
+  geosubdata_housingpub2009 <- aggregate(geosubdata_housingpub2009[,1:2], by=list(geosubdata_housingpub2009$bc_code), do_union = TRUE, FUN=mean)
+  geosubdata_housingpub2009 <- subset(geosubdata_housingpub2009, select=-c(Group.1))
+  
+  # Make the map
+  palette3 <- c("#084594", "#2171B5", "#4292C6", "#6BAED6", "#9ECAE1", "#C6DBEF", "#FC9272", "#FB6A4A")
+  
+  png("/Users/Maartje/Desktop/pubhousing_map_8years.png", width=600, height=600)
+  plot(geosubdata_housingpub2009, main="Change in corporation-owned (public) housing (2009-2017)", pal=palette3) #TO DO: check neighbourhoods with missing data: which are they?
   dev.off()
   
-# TO DO  
-# Plot change in public housing (8 year period)   
-# Plot change in public housing (12 year period)
-# Plot change in net household income (4 year period)
-# Plot change in net household income (8 year period)   
-# Plot change in net household income (12 year period) 
+# Plot change in public housing (12 year period)  
+  
+  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+  geosubdata_housingpub2005  <- subset(geosubdata, select=c(housing_pub_delta2005, geometry, bc_code))
+  
+  # Merge areas for combined neighbourhoods 
+  geosubdata_housingpub2005 <- aggregate(geosubdata_housingpub2005[,1:2], by=list(geosubdata_housingpub2005$bc_code), do_union = TRUE, FUN=mean)
+  geosubdata_housingpub2005 <- subset(geosubdata_housingpub2005, select=-c(Group.1))
+  
+  # Make the map
+  palette4 <- c("#084594", "#2171B5", "#4292C6", "#6BAED6", "#9ECAE1", "#C6DBEF", "#EFF3FF", "#FEE0D2", "#FC9272", "#DE2D26")
+  
+  png("/Users/Maartje/Desktop/pubhousing_map_12years.png", width=600, height=600)
+  plot(geosubdata_housingpub2005, main="Change in corporation-owned (public) housing (2005-2017)", pal=palette4) #TO DO: check neighbourhoods with missing data: which are they?
+  dev.off()
+
+# Plot change in net household income (4 year period)  
+  
+  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+  geosubdata_netincome2013  <- subset(geosubdata, select=c(netincome_delta2013, geometry, bc_code))
+  
+  # Merge areas for combined neighbourhoods 
+  geosubdata_netincome2013 <- aggregate(geosubdata_netincome2013[,1:2], by=list(geosubdata_netincome2013$bc_code), do_union = TRUE, FUN=mean)
+  geosubdata_netincome2013 <- subset(geosubdata_netincome2013, select=-c(Group.1))
+  
+  # Make the map
+  png("/Users/Maartje/Desktop/nethouseholdincome_map_4years.png", width=600, height=600)
+  plot(geosubdata_netincome2013, main="Change in net income per household (2013-2017)", pal=brewer.pal(name="Reds", n=8)) #TO DO: check neighbourhoods with missing data: which are they?
+  dev.off()
+  
+# Plot change in net household income (8 year period)  
+  
+  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+  geosubdata_netincome2009  <- subset(geosubdata, select=c(netincome_delta2009, geometry, bc_code))
+  
+  # Merge areas for combined neighbourhoods 
+  geosubdata_netincome2009 <- aggregate(geosubdata_netincome2009[,1:2], by=list(geosubdata_netincome2009$bc_code), do_union = TRUE, FUN=mean)
+  geosubdata_netincome2009 <- subset(geosubdata_netincome2009, select=-c(Group.1))
+  
+  # Make the map
+  png("/Users/Maartje/Desktop/nethouseholdincome_map_8years.png", width=600, height=600)
+  plot(geosubdata_netincome2009, main="Change in net income per household (2009-2017)", pal=brewer.pal(name="Reds", n=9)) #TO DO: check neighbourhoods with missing data: which are they?
+  dev.off()
+  
+# Plot change in net household income (8 year period)  
+  
+  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+  geosubdata_netincome2005  <- subset(geosubdata, select=c(netincome_delta2005, geometry, bc_code))
+  
+  # Merge areas for combined neighbourhoods 
+  geosubdata_netincome2005 <- aggregate(geosubdata_netincome2005[,1:2], by=list(geosubdata_netincome2005$bc_code), do_union = TRUE, FUN=mean)
+  geosubdata_netincome2005 <- subset(geosubdata_netincome2005, select=-c(Group.1))
+  
+  # Make the map
+  brewer.pal(name="Reds",n=9)
+  palette5 <- c("#FFF5F0", "#FEE0D2", "#FCBBA1", "#FC9272", "#FB6A4A", "#EF3B2C", "#CB181D", "#A50F15", "#67000D", "#39060C")
+  
+  png("/Users/Maartje/Desktop/nethouseholdincome_map_12years.png", width=600, height=600)
+  plot(geosubdata_netincome2005, main="Change in net income per household (2005-2017)", pal=palette5) #TO DO: check neighbourhoods with missing data: which are they?
+  dev.off()
 
   
 # Analysis: PVDA ------------------------------------------------------------------------------------------------- 
