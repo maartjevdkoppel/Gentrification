@@ -10,7 +10,7 @@
 # Clean environment
   rm(list=ls())
 
-# TO DO: elect only libraries used
+# TO DO: select only libraries used
   library(raster)     
   library(foreign) 
   library(tidyverse)
@@ -395,7 +395,7 @@
   wordreg(l = list(pvda.op1.m1, pvda.op1.m2, pvda.op1.m3), file = "/Desktop/pvda_gentr_4years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
-  # Predicted probabilities plot
+  # Predicted probabilities plot: change in public housing
   pvda.op1.preddata <- with(data.pvda.op1, list(imm_TMSA = seq(5,55,25), housing_pub_delta2013 = seq(-25,10,1), 
                                                       housing_pub=mean(housing_pub),
                                                       netHHincome=mean(netHHincome),
@@ -407,10 +407,24 @@
                                                       unempl     =mean(unempl),
                                                       netincome_delta2013=mean(netincome_delta2013)))
   jpeg("/Users/Maartje/Desktop/pvda_4years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(pvda.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=pvda.op1.preddata, CIs=TRUE)
+  emmip(pvda.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=pvda.op1.preddata, CIs=TRUE) + labs(title="Predicted levels of PvdA support at different levels of change \nin public housing (∆t = 4), by level of TMSA migration background")
   dev.off()
   
-  # TO DO: predicted probs plot for delta net income 
+  # Predicted probabilities plot: change in net household income 
+  pvda.op1.preddata <- with(data.pvda.op1, list(imm_TMSA = seq(5,55,25), netincome_delta2013 = seq(0,40,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                housing_pub_delta2013=mean(housing_pub_delta2013)))
+  jpeg("/Users/Maartje/Desktop/pvda_4years_netincome_plot.jpg", width = 500, height = 500)
+  emmip(pvda.op1.m3, imm_TMSA ~ netincome_delta2013, at=pvda.op1.preddata, CIs=TRUE) + labs(title="Predicted levels of PvdA support at different levels of change \n in net household income (∆t = 4), by level of TMSA migration background")
+  dev.off()
+  
   
 # OPTION 2 - Gentrification as change over 8 years (2009-2017)
   # Model 1: composition effects
@@ -441,7 +455,7 @@
   wordreg(l = list(pvda.op2.m1, pvda.op2.m2, pvda.op2.m3), file = "/Desktop/pvda_gentr_8years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
-  # Predicted probabilities plot
+  # Predicted probabilities plot: change in public housing
   pvda.op2.preddata <- with(data.pvda.op2, list(imm_TMSA = seq(5,55,25), housing_pub_delta2009 = seq(-25,10,1), 
                                                 housing_pub=mean(housing_pub),
                                                 netHHincome=mean(netHHincome),
@@ -453,7 +467,22 @@
                                                 unempl     =mean(unempl),
                                                 netincome_delta2009=mean(netincome_delta2009)))
   jpeg("/Users/Maartje/Desktop/pvda_8years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(pvda.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=pvda.op2.preddata, CIs=TRUE)
+  emmip(pvda.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=pvda.op2.preddata, CIs=TRUE) + labs(title="Predicted levels of PvdA support at different levels of change \nin public housing (∆t = 8), by level of TMSA migration background")
+  dev.off()
+  
+  # Predicted probabilities plot: change in net household income
+  pvda.op2.preddata <- with(data.pvda.op2, list(imm_TMSA = seq(5,55,25), netincome_delta2009 = seq(0,50,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                housing_pub_delta2009=mean(housing_pub_delta2009)))
+  jpeg("/Users/Maartje/Desktop/pvda_8years_netincome_plot.jpg", width = 500, height = 500) 
+  emmip(pvda.op2.m3, imm_TMSA ~ netincome_delta2009, at=pvda.op2.preddata, CIs=TRUE) + labs(title="Predicted levels of PvdA support at different levels of change \nin net household income (∆t = 8), by level of TMSA migration background")
   dev.off()
   
 # OPTION 3 - Gentrification as change over 12 years (2005-2017)
@@ -485,7 +514,7 @@
   wordreg(l = list(pvda.op3.m1, pvda.op3.m2, pvda.op3.m3), file = "/Desktop/pvda_gentr_12years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
-  # Predicted probabilities plot
+  # Predicted probabilities plot: change in public housing
   pvda.op3.preddata <- with(data.pvda.op3, list(imm_TMSA = seq(5,55,25), housing_pub_delta2005 = seq(-25,10,1), 
                                                 housing_pub=mean(housing_pub),
                                                 netHHincome=mean(netHHincome),
@@ -497,7 +526,22 @@
                                                 unempl     =mean(unempl),
                                                 netincome_delta2005=mean(netincome_delta2005)))
   jpeg("/Users/Maartje/Desktop/pvda_12years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(pvda.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=pvda.op3.preddata, CIs=TRUE)
+  emmip(pvda.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=pvda.op3.preddata, CIs=TRUE) + labs(title="Predicted levels of PvdA support at different levels of change \nin public housing (∆t = 12), by level of TMSA migration background")
+  dev.off()
+  
+  # Predicted probabilities plot: change in net household income
+  pvda.op3.preddata <- with(data.pvda.op3, list(imm_TMSA = seq(5,55,25), netincome_delta2005 = seq(0,50,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                housing_pub_delta2005=mean(housing_pub_delta2005)))
+  jpeg("/Users/Maartje/Desktop/pvda_12years_netincome_plot.jpg", width = 500, height = 500)
+  emmip(pvda.op3.m3, imm_TMSA ~ netincome_delta2005, at=pvda.op3.preddata, CIs=TRUE) + labs(title="Predicted levels of PvdA support at different levels of change \nin net household income (∆t = 12), by level of TMSA migration background")
   dev.off()
   
 # Analysis: MC parties ------------------------------------------------------------------------------------------------- 
@@ -531,7 +575,7 @@
   wordreg(l = list(mc.op1.m1, mc.op1.m2, mc.op1.m3), file = "/Desktop/mcparties_gentr_4years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
-  # Predicted probabilities plot
+  # Predicted probabilities plot: change in public housing
   mc.op1.preddata <- with(data.mc.op1, list(imm_TMSA = seq(5,55,25), housing_pub_delta2013 = seq(-25,10,1), 
                                                 housing_pub=mean(housing_pub),
                                                 netHHincome=mean(netHHincome),
@@ -543,7 +587,22 @@
                                                 unempl     =mean(unempl),
                                                 netincome_delta2013=mean(netincome_delta2013)))
   jpeg("/Users/Maartje/Desktop/mcparties_4years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(mc.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=mc.op1.preddata, CIs=TRUE)
+  emmip(mc.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=mc.op1.preddata, CIs=TRUE) + labs(title="Predicted levels of multicultural party support at different levels \nof change in public housing (∆t = 4), by level of TMSA \nmigration background")
+  dev.off()
+  
+  # Predicted probabilities plot: change in net household income
+  mc.op1.preddata <- with(data.mc.op1, list(imm_TMSA = seq(5,55,25), netincome_delta2013 = seq(0,50,1), 
+                                            housing_pub=mean(housing_pub),
+                                            netHHincome=mean(netHHincome),
+                                            imm_other  =mean(imm_other),
+                                            edu_low    =mean(edu_low),
+                                            edu_high   =mean(edu_high),
+                                            age_18t26  =mean(age_18t26),
+                                            age_66plus =mean(age_66plus),
+                                            unempl     =mean(unempl),
+                                            housing_pub_delta2013=mean(housing_pub_delta2013)))
+  jpeg("/Users/Maartje/Desktop/mcparties_4years_netincome_plot.jpg", width = 500, height = 500)
+  emmip(mc.op1.m3, imm_TMSA ~ netincome_delta2013, at=mc.op1.preddata, CIs=TRUE) + labs(title="Predicted levels of multicultural party support at different levels \nof change in net household income (∆t = 4), by level of TMSA \nmigration background")
   dev.off()
   
 
@@ -576,7 +635,7 @@
   wordreg(l = list(mc.op2.m1, mc.op2.m2, mc.op2.m3), file = "/Desktop/mcparties_gentr_8years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
-  # Predicted probabilities plot
+  # Predicted probabilities plot: change in public housing
   mc.op2.preddata <- with(data.mc.op2, list(imm_TMSA = seq(5,55,25), housing_pub_delta2009 = seq(-25,10,1), 
                                             housing_pub=mean(housing_pub),
                                             netHHincome=mean(netHHincome),
@@ -588,7 +647,22 @@
                                             unempl     =mean(unempl),
                                             netincome_delta2009=mean(netincome_delta2009)))
   jpeg("/Users/Maartje/Desktop/mcparties_8years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(mc.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=mc.op2.preddata, CIs=TRUE)
+  emmip(mc.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=mc.op2.preddata, CIs=TRUE) + labs(title="Predicted levels of multicultural party support at different levels \nof change in public housing (∆t = 8), by level of TMSA \nmigration background")
+  dev.off()
+  
+  # Predicted probabilities plot: change in net household income
+  mc.op2.preddata <- with(data.mc.op2, list(imm_TMSA = seq(5,55,25), netincome_delta2009 = seq(0,50,1), 
+                                            housing_pub=mean(housing_pub),
+                                            netHHincome=mean(netHHincome),
+                                            imm_other  =mean(imm_other),
+                                            edu_low    =mean(edu_low),
+                                            edu_high   =mean(edu_high),
+                                            age_18t26  =mean(age_18t26),
+                                            age_66plus =mean(age_66plus),
+                                            unempl     =mean(unempl),
+                                            housing_pub_delta2009=mean(housing_pub_delta2009)))
+  jpeg("/Users/Maartje/Desktop/mcparties_8years_netincome_plot.jpg", width = 500, height = 500)
+  emmip(mc.op2.m3, imm_TMSA ~ netincome_delta2009, at=mc.op2.preddata, CIs=TRUE) + labs(title="Predicted levels of multicultural party support at different levels \nof change in net household income (∆t = 8), by level of TMSA \nmigration background")
   dev.off()
   
 # OPTION 3 - Gentrification as change over 12 years (2005-2017)
@@ -632,7 +706,22 @@
                                             unempl     =mean(unempl),
                                             netincome_delta2005=mean(netincome_delta2005)))
   jpeg("/Users/Maartje/Desktop/mcparties_12years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(mc.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=mc.op3.preddata, CIs=TRUE)
+  emmip(mc.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=mc.op3.preddata, CIs=TRUE) + labs(title="Predicted levels of multicultural party support at different levels \nof change in public housing (∆t = 12), by level of TMSA \nmigration background")
+  dev.off()
+  
+  # Predicted probabilities plot
+  mc.op3.preddata <- with(data.mc.op3, list(imm_TMSA = seq(5,55,25), netincome_delta2005 = seq(0,50,1), 
+                                            housing_pub=mean(housing_pub),
+                                            netHHincome=mean(netHHincome),
+                                            imm_other  =mean(imm_other),
+                                            edu_low    =mean(edu_low),
+                                            edu_high   =mean(edu_high),
+                                            age_18t26  =mean(age_18t26),
+                                            age_66plus =mean(age_66plus),
+                                            unempl     =mean(unempl),
+                                            housing_pub_delta2005=mean(housing_pub_delta2005)))
+  jpeg("/Users/Maartje/Desktop/mcparties_12years_netincome_plot.jpg", width = 500, height = 500)
+  emmip(mc.op3.m3, imm_TMSA ~ netincome_delta2005, at=mc.op3.preddata, CIs=TRUE) + labs(title="Predicted levels of multicultural party support at different levels \nof change in net household income (∆t = 12), by level of TMSA \nmigration background")
   dev.off()
   
   
@@ -667,7 +756,7 @@
   wordreg(l = list(turn.op1.m1, turn.op1.m2, turn.op1.m3), file = "/Desktop/turnout_gentr_4years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
-  # Predicted probabilities plot
+  # Predicted probabilities plot: change in public housing
   turn.op1.preddata <- with(data.turn.op1, list(imm_TMSA = seq(5,55,25), housing_pub_delta2013 = seq(-25,10,1), 
                                                 housing_pub=mean(housing_pub),
                                                 netHHincome=mean(netHHincome),
@@ -679,7 +768,22 @@
                                                 unempl     =mean(unempl),
                                                 netincome_delta2013=mean(netincome_delta2013)))
   jpeg("/Users/Maartje/Desktop/turnout_4years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(turn.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=turn.op1.preddata, CIs=TRUE)
+  emmip(turn.op1.m3, imm_TMSA ~ housing_pub_delta2013, at=turn.op1.preddata, CIs=TRUE) + labs(title="Predicted levels of turnout at different levels of change in \npublic housing (∆t = 4), by level of TMSA migration background")
+  dev.off()
+  
+  # Predicted probabilities plot: change in net income
+  turn.op1.preddata <- with(data.turn.op1, list(imm_TMSA = seq(5,55,25), netincome_delta2013 = seq(0,50,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                housing_pub_delta2013=mean(housing_pub_delta2013)))
+  jpeg("/Users/Maartje/Desktop/turnout_4years_netincome_plot.jpg", width = 500, height = 500)
+  emmip(turn.op1.m3, imm_TMSA ~ netincome_delta2013, at=turn.op1.preddata, CIs=TRUE) + labs(title="Predicted levels of turnout at different levels of change in \nnet household income (∆t = 4), by level of TMSA migration background")
   dev.off()
   
 # OPTION 2 - Gentrification as change over 8 years (2009-2017)
@@ -711,7 +815,7 @@
   wordreg(l = list(turn.op2.m1, turn.op2.m2, turn.op2.m3), file = "/Desktop/turnout_gentr_8years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
-  # Predicted probabilities plot
+  # Predicted probabilities plot: change in public housing
   turn.op2.preddata <- with(data.turn.op2, list(imm_TMSA = seq(5,55,25), housing_pub_delta2009 = seq(-25,10,1), 
                                                 housing_pub=mean(housing_pub),
                                                 netHHincome=mean(netHHincome),
@@ -723,7 +827,22 @@
                                                 unempl     =mean(unempl),
                                                 netincome_delta2009=mean(netincome_delta2009)))
   jpeg("/Users/Maartje/Desktop/turnout_8years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(turn.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=turn.op2.preddata, CIs=TRUE)
+  emmip(turn.op2.m3, imm_TMSA ~ housing_pub_delta2009, at=turn.op2.preddata, CIs=TRUE) + labs(title="Predicted levels of turnout at different levels of change in \npublic housing (∆t = 8), by level of TMSA migration background")
+  dev.off()
+  
+  # Predicted probabilities plot: change in net household income
+  turn.op2.preddata <- with(data.turn.op2, list(imm_TMSA = seq(5,55,25), netincome_delta2009 = seq(0,50,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                housing_pub_delta2009=mean(housing_pub_delta2009)))
+  jpeg("/Users/Maartje/Desktop/turnout_8years_netincome_plot.jpg", width = 500, height = 500)
+  emmip(turn.op2.m3, imm_TMSA ~ netincome_delta2009, at=turn.op2.preddata, CIs=TRUE) + labs(title="Predicted levels of turnout at different levels of change in \nnet household income (∆t = 8), by level of TMSA migration background")
   dev.off()
   
 # OPTION 3 - Gentrification as change over 12 years (2005-2017)
@@ -755,7 +874,7 @@
   wordreg(l = list(turn.op3.m1, turn.op3.m2, turn.op3.m3), file = "/Desktop/turnout_gentr_12years.doc", 
           groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
-  # Predicted probabilities plot
+  # Predicted probabilities plot: change in public housing
   turn.op3.preddata <- with(data.turn.op3, list(imm_TMSA = seq(5,55,25), housing_pub_delta2005 = seq(-25,10,1), 
                                                 housing_pub=mean(housing_pub),
                                                 netHHincome=mean(netHHincome),
@@ -767,7 +886,22 @@
                                                 unempl     =mean(unempl),
                                                 netincome_delta2005=mean(netincome_delta2005)))
   jpeg("/Users/Maartje/Desktop/turnout_12years_pubhousing_plot.jpg", width = 500, height = 500)
-  emmip(turn.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=turn.op3.preddata, CIs=TRUE)
+  emmip(turn.op3.m3, imm_TMSA ~ housing_pub_delta2005, at=turn.op3.preddata, CIs=TRUE) + labs(title="Predicted levels of turnout at different levels of change in \npublic housing (∆t = 12), by level of TMSA migration background")
+  dev.off()
+  
+  # Predicted probabilities plot: change in net household income
+  turn.op3.preddata <- with(data.turn.op3, list(imm_TMSA = seq(5,55,25), netincome_delta2005 = seq(1,50,1), 
+                                                housing_pub=mean(housing_pub),
+                                                netHHincome=mean(netHHincome),
+                                                imm_other  =mean(imm_other),
+                                                edu_low    =mean(edu_low),
+                                                edu_high   =mean(edu_high),
+                                                age_18t26  =mean(age_18t26),
+                                                age_66plus =mean(age_66plus),
+                                                unempl     =mean(unempl),
+                                                housing_pub_delta2005=mean(housing_pub_delta2005)))
+  jpeg("/Users/Maartje/Desktop/turnout_12years_netincome_plot.jpg", width = 500, height = 500)
+  emmip(turn.op3.m3, imm_TMSA ~ netincome_delta2005, at=turn.op3.preddata, CIs=TRUE) + labs(title="Predicted levels of turnout at different levels of change in \nnet household income (∆t = 12), by level of TMSA migration background")
   dev.off()
   
 # Check OLS regression assumptions ------------------------------------------------------------------------------------------------- 
