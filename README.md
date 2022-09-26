@@ -1,5 +1,4 @@
 # Gentrification
-Regression analyses for a paper on the impact of gentrification in Amsterdam on support for the social-democrats (PvdA), support for multicultural parties and voter turnout. 
-All data, for both dataset preparation and regression analysis, can be found in the folder 'Gentrification data'.
-The R script can be used to generate the main dataset. 
-The STATA do-file can be used for the analyses using that dataset. 
+Regression nalyses for "Perils of 'revitalization'? Gentrification, political participation and support for social democratic and multicultural parties in Amsterdam." The 'Data preparation' R script converts all raw data into one data file used for the empirical analysis, see the 'Main analysis' script. All data files are uploaded under 'Data'. Sources and any manual changes to these data files are detailed under 'Log of data sources + preparation.'
+
+
