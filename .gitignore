@@ -3,3 +3,5 @@ Buurtkenmerken (versie 10-3-21).csv
 Data collection.R
 .DS_Store
 *.icloud
+.Rapp.history
+.Rhistory
