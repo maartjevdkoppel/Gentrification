@@ -179,7 +179,6 @@ setwd("/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Link-Jong-Amsterdam/
 # Descriptives: visualisation gentrification ---------------------------------------------------------------------
   
 # Import shapefile for neighbourhoods (based on 2015 bc code)
-  #TODO: shapefile no longer imports?
   geodata <- st_read("bc2015def_region.shp")
   geodata <- geodata %>% rename(bc_code = BC2015) 
   geodata <- geodata %>% rename(bc_naam = NAAM) 
@@ -286,37 +285,38 @@ setwd("/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Link-Jong-Amsterdam/
   plot(geosubdata_housingpub2013, main="Change in corporation-owned (public) housing (2013-2017)", pal=palette2) #TO DO: check neighbourhoods with missing data: which are they?
   dev.off()
 
-# Plot change in public housing (8 year period)  
-  
-  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
-  geosubdata_housingpub2009  <- subset(geosubdata, select=c(housing_pub_delta2009, geometry, bc_code))
-  
-  # Merge areas for combined neighbourhoods 
-  geosubdata_housingpub2009 <- aggregate(geosubdata_housingpub2009[,1:2], by=list(geosubdata_housingpub2009$bc_code), do_union = TRUE, FUN=mean)
-  geosubdata_housingpub2009 <- subset(geosubdata_housingpub2009, select=-c(Group.1))
-  
-  # Make the map
-  palette3 <- c("#084594", "#2171B5", "#4292C6", "#6BAED6", "#9ECAE1", "#C6DBEF", "#FC9272", "#FB6A4A")
-  
-  png("pubhousing_map_8years.png", width=600, height=600)
-  plot(geosubdata_housingpub2009, main="Change in corporation-owned (public) housing (2009-2017)", pal=palette3) #TO DO: check neighbourhoods with missing data: which are they?
-  dev.off()
-  
-# Plot change in public housing (12 year period)  
-  
-  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
-  geosubdata_housingpub2005  <- subset(geosubdata, select=c(housing_pub_delta2005, geometry, bc_code))
-  
-  # Merge areas for combined neighbourhoods 
-  geosubdata_housingpub2005 <- aggregate(geosubdata_housingpub2005[,1:2], by=list(geosubdata_housingpub2005$bc_code), do_union = TRUE, FUN=mean)
-  geosubdata_housingpub2005 <- subset(geosubdata_housingpub2005, select=-c(Group.1))
-  
-  # Make the map
-  palette4 <- c("#084594", "#2171B5", "#4292C6", "#6BAED6", "#9ECAE1", "#C6DBEF", "#EFF3FF", "#FEE0D2", "#FC9272", "#DE2D26")
-  
-  png("pubhousing_map_12years.png", width=600, height=600)
-  plot(geosubdata_housingpub2005, main="Change in corporation-owned (public) housing (2005-2017)", pal=palette4) #TO DO: check neighbourhoods with missing data: which are they?
-  dev.off()
+#TODO: probably remove if working with 4-year gentrification definition
+## Plot change in public housing (8 year period)  
+#  
+#  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#  geosubdata_housingpub2009  <- subset(geosubdata, select=c(housing_pub_delta2009, geometry, bc_code))
+#  
+#  # Merge areas for combined neighbourhoods 
+#  geosubdata_housingpub2009 <- aggregate(geosubdata_housingpub2009[,1:2], by=list(geosubdata_housingpub2009$bc_code), do_union = TRUE, FUN=mean)
+#  geosubdata_housingpub2009 <- subset(geosubdata_housingpub2009, select=-c(Group.1))
+#  
+#  # Make the map
+#  palette3 <- c("#084594", "#2171B5", "#4292C6", "#6BAED6", "#9ECAE1", "#C6DBEF", "#FC9272", "#FB6A4A")
+#  
+#  png("pubhousing_map_8years.png", width=600, height=600)
+#  plot(geosubdata_housingpub2009, main="Change in corporation-owned (public) housing (2009-2017)", pal=palette3) #TO DO: check neighbourhoods with missing data: which are they?
+#  dev.off()
+#  
+## Plot change in public housing (12 year period)  
+#  
+#  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#  geosubdata_housingpub2005  <- subset(geosubdata, select=c(housing_pub_delta2005, geometry, bc_code))
+#  
+#  # Merge areas for combined neighbourhoods 
+#  geosubdata_housingpub2005 <- aggregate(geosubdata_housingpub2005[,1:2], by=list(geosubdata_housingpub2005$bc_code), do_union = TRUE, FUN=mean)
+#  geosubdata_housingpub2005 <- subset(geosubdata_housingpub2005, select=-c(Group.1))
+#  
+#  # Make the map
+#  palette4 <- c("#084594", "#2171B5", "#4292C6", "#6BAED6", "#9ECAE1", "#C6DBEF", "#EFF3FF", "#FEE0D2", "#FC9272", "#DE2D26")
+#  
+#  png("pubhousing_map_12years.png", width=600, height=600)
+#  plot(geosubdata_housingpub2005, main="Change in corporation-owned (public) housing (2005-2017)", pal=palette4) #TO DO: check neighbourhoods with missing data: which are they?
+#  dev.off()
 
 # Plot change in net household income (4 year period)  
   
@@ -331,39 +331,164 @@ setwd("/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Link-Jong-Amsterdam/
   png("nethouseholdincome_map_4years.png", width=600, height=600)
   plot(geosubdata_netincome2013, main="Change in net income per household (2013-2017)", pal=brewer.pal(name="Reds", n=8)) #TO DO: check neighbourhoods with missing data: which are they?
   dev.off()
-  
-# Plot change in net household income (8 year period)  
-  
-  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
-  geosubdata_netincome2009  <- subset(geosubdata, select=c(netincome_delta2009, geometry, bc_code))
-  
-  # Merge areas for combined neighbourhoods 
-  geosubdata_netincome2009 <- aggregate(geosubdata_netincome2009[,1:2], by=list(geosubdata_netincome2009$bc_code), do_union = TRUE, FUN=mean)
-  geosubdata_netincome2009 <- subset(geosubdata_netincome2009, select=-c(Group.1))
-  
-  # Make the map
-  png("nethouseholdincome_map_8years.png", width=600, height=600)
-  plot(geosubdata_netincome2009, main="Change in net income per household (2009-2017)", pal=brewer.pal(name="Reds", n=9)) #TO DO: check neighbourhoods with missing data: which are they?
-  dev.off()
-  
-# Plot change in net household income (8 year period)  
-  
-  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
-  geosubdata_netincome2005  <- subset(geosubdata, select=c(netincome_delta2005, geometry, bc_code))
-  
-  # Merge areas for combined neighbourhoods 
-  geosubdata_netincome2005 <- aggregate(geosubdata_netincome2005[,1:2], by=list(geosubdata_netincome2005$bc_code), do_union = TRUE, FUN=mean)
-  geosubdata_netincome2005 <- subset(geosubdata_netincome2005, select=-c(Group.1))
-  
-  # Make the map
-  brewer.pal(name="Reds",n=9)
-  palette5 <- c("#FFF5F0", "#FEE0D2", "#FCBBA1", "#FC9272", "#FB6A4A", "#EF3B2C", "#CB181D", "#A50F15", "#67000D", "#39060C")
-  
-  png("nethouseholdincome_map_12years.png", width=600, height=600)
-  plot(geosubdata_netincome2005, main="Change in net income per household (2005-2017)", pal=palette5) #TO DO: check neighbourhoods with missing data: which are they?
-  dev.off()
 
+#TODO: probably remove if working with 4-year gentrification definition 
+## Plot change in net household income (8 year period)  
+#  
+#  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#  geosubdata_netincome2009  <- subset(geosubdata, select=c(netincome_delta2009, geometry, bc_code))
+#  
+#  # Merge areas for combined neighbourhoods 
+#  geosubdata_netincome2009 <- aggregate(geosubdata_netincome2009[,1:2], by=list(geosubdata_netincome2009$bc_code), do_union = TRUE, FUN=mean)
+#  geosubdata_netincome2009 <- subset(geosubdata_netincome2009, select=-c(Group.1))
+#  
+#  # Make the map
+#  png("nethouseholdincome_map_8years.png", width=600, height=600)
+#  plot(geosubdata_netincome2009, main="Change in net income per household (2009-2017)", pal=brewer.pal(name="Reds", n=9)) #TO DO: check neighbourhoods with missing data: which are they?
+#  dev.off()
+#  
+## Plot change in net household income (8 year period)  
+#  
+#  # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#  geosubdata_netincome2005  <- subset(geosubdata, select=c(netincome_delta2005, geometry, bc_code))
+#  
+#  # Merge areas for combined neighbourhoods 
+#  geosubdata_netincome2005 <- aggregate(geosubdata_netincome2005[,1:2], by=list(geosubdata_netincome2005$bc_code), do_union = TRUE, FUN=mean)
+#  geosubdata_netincome2005 <- subset(geosubdata_netincome2005, select=-c(Group.1))
+#  
+#  # Make the map
+#  brewer.pal(name="Reds",n=9)
+#  palette5 <- c("#FFF5F0", "#FEE0D2", "#FCBBA1", "#FC9272", "#FB6A4A", "#EF3B2C", "#CB181D", "#A50F15", "#67000D", "#39060C")
+#  
+#  png("nethouseholdincome_map_12years.png", width=600, height=600)
+#  plot(geosubdata_netincome2005, main="Change in net income per household (2005-2017)", pal=palette5) #TO DO: check neighbourhoods with missing data: which are they?
+#  dev.off()
+
+# Descriptives: 2022 election ------------------------------------------------------------------------------------
   
+# Import 2022 data
+# Data can be obtained here: https://onderzoek.amsterdam.nl/dataset/verkiezingen-gemeenteraad-2022  
+additional_2022 <- read_xlsx("2022_gemeenteraadsverkiezingen_wijk_stadsdeel_5cb9f5e19c.xlsx", skip = 1) 
+  
+election_2022 <- additional_2022 %>%
+  select(wijkcode, wijknaam, kiesgerechtigden, `geldige stembiljetten`, `Partij van de Arbeid (P.v.d.A.)`) %>%
+  mutate(turnout_2022 = (`geldige stembiljetten` / kiesgerechtigden)*100,
+         PVDA_2022 = (`Partij van de Arbeid (P.v.d.A.)` / `geldige stembiljetten`)*100) %>%
+  rename(bc_code = wijkcode,
+         bc_naam = wijknaam)
+
+# Merge neighbourhoods: visualise neighbourhoods which were combined at one point in the period of 2005-2017 as one unit
+# Note: similar steps were taken in the data preparation script, to ensure continuity in the neighbourhood units
+
+  # De Krommert: Chassébuurt + Geuzenbuurt
+  condition     <- election_2022$bc_naam == "De Krommert" | election_2022$bc_naam == "Chassébuurt" | election_2022$bc_naam == "Geuzenbuurt"
+  election_2022 <- rename.bc(election_2022, condition, "E40+E75", "De Krommert: Chassébuurt + Geuzenbuurt")
+  
+  # Diamantbuurt/Zuid Pijp
+  condition     <- election_2022$bc_naam == "Diamantbuurt" | election_2022$bc_naam == "Zuid Pijp"
+  election_2022 <- rename.bc(election_2022, condition, "K26", "Diamantbuurt/Zuid Pijp")
+  
+  # Museumkwartier + Duivelseiland 
+  ## LET OP: election_2022$bc_code == "K47" toegevoegd in poging probleem op te lossen
+  #TODO: what does this mean?
+  condition     <- election_2022$bc_naam == "Duivelseiland" | election_2022$bc_naam == "Museumkwartier" | election_2022$bc_naam == "Museumkwartier + Duivelseiland" | election_2022$bc_code == "K50" | election_2022$bc_code == "K47"
+  election_2022 <- rename.bc(election_2022, condition, "K47+K50", "Museumkwartier + Duivelseiland")
+  
+  # Buikslotermeer + Elzenhagen
+  condition     <- election_2022$bc_naam == "Elzenhagen" | election_2022$bc_naam == "Buikslotermeer"
+  election_2022 <- rename.bc(election_2022, condition, "N69+N74", "Buikslotermeer + Elzenhagen")
+  
+  # Frankendael + De Omval/Overamstel
+  condition     <- election_2022$bc_naam == "Frankendael" | election_2022$bc_naam == "Frankendael + De Omval" | election_2022$bc_naam == "De Omval" | election_2022$bc_naam == "Omval/Overamstel"
+  election_2022 <- rename.bc(election_2022, condition, "M55+M58", "Frankendael + De Omval/Overamstel")
+  
+  # IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost
+  condition     <- election_2022$bc_naam == "IJburg West" | election_2022$bc_naam == "IJburg West + Zeeburgereiland/Nieuwe Diep" | election_2022$bc_naam == "Indische Buurt Oost" | election_2022$bc_naam == "Indische Buurt Oost + Zeeburgereiland/Nieuwe Diep" | election_2022$bc_naam == "Zeeburgereiland/Nieuwe Diep"
+  election_2022 <- rename.bc(election_2022, condition, "M32+M34+M35", "IJburg West + Zeeburgereiland/Nieuwe Diep + Indische Buurt Oost")
+  
+  # IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost
+  condition     <- election_2022$bc_naam == "IJplein/Vogelbuurt + Nieuwendammerham" | election_2022$bc_naam == "IJplein/Vogelbuurt + Noordelijke IJ-oevers Oost" | election_2022$bc_code == "N61" | election_2022$bc_code == "N72"
+  election_2022 <- rename.bc(election_2022, condition, "N61+N72", "IJplein/Vogelbuurt + Nieuwendammerham/Noordelijke IJ-oevers Oost")
+  
+  # Middelveldsche Akerpolder/Sloten
+  condition     <- election_2022$bc_naam == "Middelveldsche Akerpolder" | election_2022$bc_naam == "Middelveldsche Akerpolder/Sloten"
+  election_2022 <- rename.bc(election_2022, condition, "F84", "Middelveldsche Akerpolder/Sloten")
+  
+  # Nieuwendam-Noord/Waterlandpleinbuurt
+  condition     <- election_2022$bc_naam == "Nieuwendam-Noord" | election_2022$bc_naam == "Waterlandpleinbuurt"
+  election_2022 <- rename.bc(election_2022, condition, "N68", "Nieuwendam-Noord/Waterlandpleinbuurt")
+  
+  # Prinses Irenebuurt e.o./Station Zuid/WTC e.o.
+  condition     <- election_2022$bc_naam == "Prinses Irenebuurt e.o." | election_2022$bc_naam == "Station Zuid/WTC e.o."
+  election_2022 <- rename.bc(election_2022, condition, "K59", "Prinses Irenebuurt e.o./Station Zuid/WTC e.o.")
+  
+  # Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk
+  condition     <- election_2022$bc_naam == "Slotermeer-Noordoost" | election_2022$bc_naam == "Slotermeer-Noordoost + Spieringhorn" | election_2022$bc_naam == "Westelijk Havengebied + Bedrijventerrein Sloterdijk" | election_2022$bc_code == "B10" | election_2022$bc_code == "F11" | election_2022$bc_code == "B11" | election_2022$bc_code == "F75"
+  election_2022 <- rename.bc(election_2022, condition, "F76+F75+B10+F11", "Slotermeer-Noordoost + Spieringhorn + Westelijk Havengebied + Bedrijventerrein Sloterdijk")
+  
+  # Slotervaart: Slotervaart Noord + Slotervaart Zuid
+  condition     <- election_2022$bc_naam == "Slotervaart" | election_2022$bc_naam == "Slotervaart Noord" | election_2022$bc_naam == "Slotervaart Zuid"
+  election_2022 <- rename.bc(election_2022, condition, "F85+F89", "Slotervaart: Slotervaart Noord + Slotervaart Zuid")
+  
+  # Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West
+  condition     <- election_2022$bc_naam == "Volewijck + Buiksloterham" | election_2022$bc_naam == "Volewijck + Noordelijke IJ-oevers West" | election_2022$bc_code == "N60" | election_2022$bc_code == "N71"
+  election_2022 <- rename.bc(election_2022, condition, "N60+N71", "Volewijck + Buiksloterham/Volewijck + Noordelijke IJ-oevers West")
+  
+  # Following neighbourhoods were consistent in vote share data, but failed to merge with the neighbourhood characteristics data (e.g. not in neighbourhood data as a combined code)
+  # Spaarndammer- en Zeeheldenbuurt + Houthavens
+  condition     <- election_2022$bc_code == "E12" | election_2022$bc_code == "E13" | election_2022$bc_code == "E13+E12"
+  election_2022 <- rename.bc(election_2022, condition, "E13+12", "Spaarndammer- en Zeeheldenbuurt + Houthavens")
+  
+  # Landlust + Sloterdijk
+  condition     <- election_2022$bc_code == "E36" | election_2022$bc_code == "E37" | election_2022$bc_code == "E37+E36"
+  election_2022 <- rename.bc(election_2022, condition, "E37+E36", "Landlust + Sloterdijk") 
+  
+  # Tuindorp Buiksloot + Nieuwendammerdijk/Buiksloterdijk
+  condition     <- election_2022$bc_code == "N63+N64" | election_2022$bc_code == "N63" | election_2022$bc_code == "N64"
+  election_2022 <- rename.bc(election_2022, condition, "N63+N64", "Tuindorp Buiksloot + Nieuwendammerdijk/Buiksloterdijk")
+  
+  # Holendrecht/Reigersbos + Amstel III/Bullewijk
+  condition     <- election_2022$bc_code == "T96+T92" | election_2022$bc_code == "T96" | election_2022$bc_code == "T92"
+  election_2022 <- rename.bc(election_2022, condition, "T96+T92", "Holendrecht/Reigersbos + Amstel III/Bullewijk")
+
+# Combine geodata with characteristics
+  #TODO: remove checks on non-matches
+no_match <- anti_join(geodata, election_2022,  by="bc_code") #check non-matches
+no_match <- anti_join(election_2022, geodata, by="bc_code")  #check non-matches
+geo_2022 <- merge(geodata, election_2022, by="bc_code") 
+
+
+# Turnout map
+# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+geo_2022_turnout  <- subset(geo_2022, select=c(turnout_2022, geometry, bc_code))
+
+# Merge areas for combined neighbourhoods 
+geo_2022_turnout <- aggregate(geo_2022_turnout[,1:2], by=list(geo_2022_turnout$bc_code), do_union = TRUE, FUN=mean)
+geo_2022_turnout <- subset(geo_2022_turnout, select=-c(Group.1))
+
+# Make the map
+png("turnout_2022_map.png", width=600, height=600)
+plot(geo_2022_turnout, main="Turnout in the 2022 municipal election") #TODO: change colour palette
+dev.off()
+
+ggplot() +
+  geom_polygon((data = geo_2022_turnout))
+
+
+#PvdA support map
+# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+geo_2022_pvda  <- subset(geo_2022, select=c(PVDA_2022, geometry, bc_code))
+
+# Merge areas for combined neighbourhoods 
+geo_2022_pvda <- aggregate(geo_2022_pvda[,1:2], by=list(geo_2022_pvda$bc_code), do_union = TRUE, FUN=mean)
+geo_2022_pvda <- subset(geo_2022_pvda, select=-c(Group.1))
+
+# Make the map
+png("pvda_2022_map.png", width=600, height=600)
+plot(geo_2022_pvda, main="Percentage of votes attained by PvdA in the 2022 municipal election") #TODO: change colour palette
+dev.off()
+  
+    
 # Analysis: PVDA ------------------------------------------------------------------------------------------------- 
 
 # OPTION 1 - Gentrification as change over 4 years (2013-2017)
