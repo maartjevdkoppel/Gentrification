@@ -47,7 +47,7 @@ election_2022 <- additional_2022 %>%
   select(wijkcode, wijknaam, kiesgerechtigden, `geldige stembiljetten`, `Partij van de Arbeid (P.v.d.A.)`) %>%
   mutate(turnout_2022 = (`geldige stembiljetten` / kiesgerechtigden)*100,
          PVDA_2022 = (`Partij van de Arbeid (P.v.d.A.)` / `geldige stembiljetten`)*100) %>%
-  rename(bc_code = wijkcode,
+  dplyr::rename(bc_code = wijkcode,
          bc_naam = wijknaam)
 
 # Import shapefile for neighbourhoods (based on 2015 bc code)
