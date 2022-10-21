@@ -17,9 +17,9 @@ setwd("/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Link-Jong-Amsterdam/
 # TODO: select only libraries used
 # TODO: add explanations of use
 
-library(maptools)     #map making TODO: not needed?
-library(rgdal)        #reading shapefiles for map making TODO: not needed?
-library(gpclib)       #dependency rgdal TODO: not needed?
+#library(maptools)     #map making TODO: not needed?
+#library(rgdal)        #reading shapefiles for map making TODO: not needed?
+#library(gpclib)       #dependency rgdal TODO: not needed?
 library(broom)        #tidying shapefiles to dataframe
 library(raster)     
 library(foreign) 
@@ -384,7 +384,38 @@ geosubdata_netincome %>%
        fill = "Change in %")
 ggsave("map_netincome_2013_2017.png")
 
+# PVDA 2018 MAP -----------------------------------------------------------
 
+# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+geosubdata_pvda <- subset(geosubdata, select=c(PVDA, geometry, bc_code))
+
+# Merge areas for combined neighbourhoods 
+geosubdata_pvda <- aggregate(geosubdata_pvda[,1:2], 
+                             by=list(geosubdata_pvda$bc_code), 
+                             do_union = TRUE, 
+                             FUN=mean) %>% #take average of net income
+  subset(select=-c(Group.1)) #TODO: this line needed?
+
+#Make map
+geosubdata_pvda %>%
+  #Turn continuous variable into factor for clearer plotting
+  mutate(pvda_factor = 
+           factor(
+             ifelse(PVDA < 10, "5-10",
+                    ifelse(PVDA < 15, "10-15",
+                           ifelse(PVDA < 20, "15-20","20-25"))),
+             levels = c("20-25", "15-20", "10-15", "5-10"), #reverse order to list high numbers first in legend
+             ordered = TRUE)) %>%
+  ggplot() + 
+  geom_sf(mapping = aes(fill = pvda_factor),
+          color = "white") +  #white neighbourhood borders
+  theme_void() + 
+  scale_fill_brewer(palette = "Blues", #income in blue
+                    na.value = "grey", #TODO:does not work yet
+                    direction = -1) +  #darker colours for higher pvda
+  labs(title = "Vote share attained by PvdA in the 2018 municipal elections", #TODO: consider removing
+       fill = "Vote share in %")
+ggsave("map_2018_pvda.png")
 
 
 ##### OLD ######## -------------------------------------------------------------------------------------------------------------------------------
