@@ -262,7 +262,7 @@ geo_2022_turnout %>%
                     direction = -1) + #darker colours for higher turnout
   labs(title = "Turnout in the 2022 municipal elections", #TODO: consider removing
        fill = "Turnout in %")
-ggsave("map_2022_turnout.png")
+ggsave("map_2022_turnout.png", width = 2370, height = 1558, units = "px")
 
 # PVDA 2022 MAP -------------------------------------------
 
@@ -294,7 +294,7 @@ geo_2022_pvda %>%
                     direction = -1) + #darker colours for higher pvda
   labs(title = "Vote share attained by PvdA in the 2022 municipal elections", #TODO: consider removing
        fill = "Vote share in %")
-ggsave("map_2022_pvda.png")
+ggsave("map_2022_pvda.png", width = 2370, height = 1558, units = "px")
 
 
 # GENTRIFICATION: PUBLIC HOUSING -------------------------------------------
@@ -347,7 +347,7 @@ geosubdata_pubhousing %>%
   #direction = -1) + #darker colours for higher turnout
   labs(title = "Change in corporation-owned (public) housing (2013-2017)", #TODO: consider removing
        fill = "Change in %")
-ggsave("map_publichousing_2013_2017.png")
+ggsave("map_publichousing_2013_2017.png", width = 2370, height = 1558, units = "px")
 
 
 # GENTRIFICATION: NET INCOME -------------------------------------------
@@ -382,7 +382,7 @@ geosubdata_netincome %>%
                     na.value = "grey") +  #TODO:does not work yet
   labs(title = "Change in average net income per household (2013-2017)", #TODO: consider removing
        fill = "Change in %")
-ggsave("map_netincome_2013_2017.png")
+ggsave("map_netincome_2013_2017.png", width = 2370, height = 1558, units = "px")
 
 # PVDA 2018 MAP -----------------------------------------------------------
 
@@ -415,8 +415,7 @@ geosubdata_pvda %>%
                     direction = -1) +  #darker colours for higher pvda
   labs(title = "Vote share attained by PvdA in the 2018 municipal elections", #TODO: consider removing
        fill = "Vote share in %")
-ggsave("map_2018_pvda.png")
-
+ggsave("map_2018_pvda.png", width = 2370, height = 1558, units = "px")
 
 ##### OLD ######## -------------------------------------------------------------------------------------------------------------------------------
 
@@ -455,7 +454,7 @@ ggsave("map_2018_pvda.png")
 ## Merge with election data
 #geodata <- left_join(shp_df, election_2022, by = c("id" = "bc_code"))
 #
-##Make the map
+##Make the mapf
 ##TODO: consider removing fill for NA
 #
 #  #Continuous scale
