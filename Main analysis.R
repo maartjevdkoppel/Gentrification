@@ -748,23 +748,191 @@ library(RColorBrewer) #colour scales for maps
   
 # Check OLS regression assumptions ------------------------------------------------------------------------------------------------- 
   
-  # TO DO
-  # assumption checks for regression
-  # collinearity checks for gentrification indicators: can they be put in one model?
+#PVDA MODELS
+#PvdA support and change in public housing
+ggplot(data = data.pvda.op1,
+       aes(y = PVDA, x = housing_pub_delta2013)) +
+    geom_point()
+
+#PvdA support and change in net household income
+ggplot(data = data.pvda.op1,
+       aes(y = PVDA, x = netincome_delta2013)) +
+  geom_point()
+
+#excluding observations with high values on net income
+data.pvda.op1 %>%
+  filter(netincome_delta2013 < 15) %>%
+  ggplot(aes(y = PVDA, x = netincome_delta2013)) +
+  geom_point()
   
-  # SEE:
-    # http://r-statistics.co/Linear-Regression.html
-    # https://www.scribbr.com/statistics/multiple-linear-regression/
+  #NOTE: no outliers on PVDA variable
+
+  #NOTE: for public housing, observation with >-20 in public housing may be 
+  #a low leverage outlier. No very clear linear relation, but no other shape either
   
+  #NOTE: for net income, there are several observations with (rare) high values on
+  #change in net income -- excluding above 15, there is still no very clear linear relation, 
+  #but no other shape appears either
+
   
-  # Typically, for each of the independent variables (predictors), the following plots are drawn to visualize the following behavior:
-  # Scatter plot: Visualize the linear relationship between the predictor and response
-  # Box plot: To spot any outlier observations in the variable. Having outliers in your predictor can drastically affect the predictions as they can easily affect the direction/slope of the line of best fit.
-  # Density plot: To see the distribution of the predictor variable. Ideally, a close to normal distribution (a bell shaped curve), without being skewed to the left or right is preferred. Let us see how to make each one of them.
+#TURNOUT MODELS
+#Turnout and change in public housing
+ggplot(data = data.turn.op1,
+       aes(y = turnout, x = housing_pub_delta2013)) +
+  geom_point()
+
+#Turnout and change in net household income
+ggplot(data = data.turn.op1,
+       aes(y = turnout, x = netincome_delta2013)) +
+  geom_point()
   
+  #NOTE: for turnout there is one outlier that might be influential 
 
 
-  
+
+#General diagnostic plots
+#TODO: keep?
+pvda.diag.metrics <- augment(pvda.op1.m2)
+head(pvda.diag.metrics)
+
+#plot residuals versus fitted
+ggplot(pvda.diag.metrics, aes(housing_pub_delta2013, PVDA)) +
+  geom_point() +
+  stat_smooth(method = lm, se = FALSE) +
+  geom_segment(aes(xend = housing_pub_delta2013, yend = .fitted), color = "red", size = 0.3)
+ggsave("pvda_rvf.png")
+
+#plot shows: observations with >-20 in pub housing might be an outlier, but low leverage
+
+#diagnostic plots wth base r
+jpeg("pvda_diagnostic plots.jpg", width = 750, height = 750)
+par(mfrow = c(2, 2))
+plot(pvda.op1.m2)
+dev.off()
+
+# Robustness check 2: removing outliers -----------------------------------------------------------------------------
+
+# OUTLIER IN PUBLIC HOUSING CHANGE
+
+# Drop one observation with very great change in public housing
+data.pvda.op1.outliers <- data.pvda.op1 %>% filter(housing_pub_delta2013 > -20)
+
+# Model 1: composition effects
+pvda.op1.m1.outliers <- lm(PVDA ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                  data = data.pvda.op1.outliers)
+summary(pvda.op1.m1.outliers)
+
+# Model 2: add gentrification
+pvda.op1.m2.outliers <- lm(PVDA ~ housing_pub + netHHincome
+                  + imm_TMSA + imm_other +
+                    + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                  + housing_pub_delta2013 + netincome_delta2013, 
+                  data = data.pvda.op1.outliers)
+summary(pvda.op1.m2.outliers)
+
+wordreg(l = list(pvda.op1.m1.outliers, pvda.op1.m2.outliers), file = "pvda_outlier_pubhousing.doc") 
+        #groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+
+  #NOTE: without public housing outlier, the effect is slightly bigger;
+  # with: b = 0.08, not significant
+  # without: b = 0.13, one star significance
+
+
+# OUTLIERS IN NET INCOME CHANGE
+
+# Drop CLUSTER of observation with very great change in public housing
+# NOTE: theoretically, this does not sound like it makes much sense
+data.pvda.op1.outliers.income <- data.pvda.op1 %>% filter(netincome_delta2013 < 15)
+
+# Model 1: composition effects
+pvda.op1.m1.outliers.income <- lm(PVDA ~ housing_pub + netHHincome
+                           + imm_TMSA + imm_other +
+                             + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                           data = data.pvda.op1.outliers.income)
+summary(pvda.op1.m1.outliers.income)
+
+# Model 2: add gentrification
+pvda.op1.m2.outliers.income <- lm(PVDA ~ housing_pub + netHHincome
+                          + imm_TMSA + imm_other +
+                            + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                          + housing_pub_delta2013 + netincome_delta2013, 
+                          data = data.pvda.op1.outliers.income)
+summary(pvda.op1.m2.outliers.income)
+
+wordreg(l = list(pvda.op1.m1.outliers.income, pvda.op1.m2.outliers.income), file = "pvda_outlier_netincome.doc") 
+#groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+
+#NOTE: does not change effect size
+
+# OUTLIER IN TURNOUT 
+
+# Drop one observation with turnout over 100%
+data.turn.op1.outliers <- data.turn.op1 %>% filter(turnout < 100)
+
+# Model 1: composition effects
+turn.op1.m1.outliers <- lm(turnout ~ housing_pub + netHHincome
+                           + imm_TMSA + imm_other +
+                             + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                           data = data.turn.op1.outliers)
+summary(turn.op1.m1.outliers)
+
+# Model 2: add gentrification
+turn.op1.m2.outliers <- lm(turnout ~ housing_pub + netHHincome
+                           + imm_TMSA + imm_other +
+                             + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                           + housing_pub_delta2013 + netincome_delta2013, 
+                           data = data.turn.op1.outliers)
+summary(turn.op1.m2.outliers)
+
+wordreg(l = list(turn.op1.m1.outliers, turn.op1.m2.outliers), file = "turn_outlier.doc")  
  
+  #NOTE: effect of change in pub housing turns smaller, (0.57 to 0.30), no longer significant
+  # effect of change in net income CHANGES SIGN (0.33 to -0.23)
+    # both not significant
+    # excluding the outlier makes effect in line with hypothesis
+
   
+# Drop one observation with turnout over 100%
+data.turn.op1.outliers.housing <- data.turn.op1 %>% filter(turnout < 100 & housing_pub_delta2013 > -20)
+
+# Model 1: composition effects
+turn.op1.m1.outliers.housing <- lm(turnout ~ housing_pub + netHHincome
+                           + imm_TMSA + imm_other +
+                             + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+                           data = data.turn.op1.outliers.housing)
+summary(turn.op1.m1.outliers.housing)
+
+# Model 2: add gentrification
+turn.op1.m2.outliers.housing <- lm(turnout ~ housing_pub + netHHincome
+                           + imm_TMSA + imm_other +
+                             + edu_low + edu_high + age_18t26 + age_66plus + unempl
+                           + housing_pub_delta2013 + netincome_delta2013, 
+                           data = data.turn.op1.outliers.housing)
+summary(turn.op1.m2.outliers.housing)
+
+wordreg(l = list(turn.op1.m1.outliers.housing, turn.op1.m2.outliers.housing), file = "turn_housing_outlier.doc") 
   
+  #NOTE: effect of change in pub housing turns smaller, (0.57 to 0.24), no longer significant
+  # effect of change in net income CHANGES SIGN (0.33 to -0.23)
+    # both not significant
+    # excluding the outlier makes effect in line with hypothesis
+
+# Multicollinearity ------------------------------------------------------------------
+
+#Check correlations of independent variables
+iv <- select(subdata, housing_pub, netHHincome, imm_TMSA, imm_other, 
+             edu_low, edu_high, age_18t26, age_66plus, unempl, housing_pub_delta2013, netincome_delta2013)
+
+cor.matrix <- cor(iv, use = "complete.obs")
+
+#Correlation plot
+library(corrplot)
+png("correlation_plot.png", width = 750, height = 750)
+corrplot(cor.matrix, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+dev.off()
+
+#Check correlation of main predictors: gentrification variables
+cor(subdata$netincome_delta2013, subdata$housing_pub_delta2013)
