@@ -37,6 +37,7 @@ library(texreg)       #exporting regression tables to word
 library(emmeans)
 library(sf)           #reading shapefiles
 library(RColorBrewer) #colour scales for maps
+library(stargazer)    #exporting regression tables
 
 # Import data -------------------------------------------------------------------------------------------------------
 
@@ -169,7 +170,15 @@ library(RColorBrewer) #colour scales for maps
                                      housing_pub_delta2005, netincome_delta2005))
   data.turn.op3 <- data.turn.op3[complete.cases(data.turn.op3),] # 2 observations deleted
 
-   
+# Drop outliers
+    
+  # Drop one observation with very great change in public housing
+  data.pvda.op1 <- data.pvda.op1 %>% filter(housing_pub_delta2013 > -20)
+  
+  # Also drop one observation with turnout over 100%
+  data.turn.op1 <- data.turn.op1 %>% filter(turnout < 100 & housing_pub_delta2013 > -20)
+  
+  
 # Analysis: PVDA ------------------------------------------------------------------------------------------------- 
 
 # OPTION 1 - Gentrification as change over 4 years (2013-2017)
@@ -189,8 +198,24 @@ library(RColorBrewer) #colour scales for maps
   summary(pvda.op1.m2)
   
   # Export regression table
-  wordreg(l = list(pvda.op1.m1, pvda.op1.m2), file = "pvda_gentr_4years.doc", 
-          groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
+  #TODO: FIX, currently order of coefficients is off!
+  stargazer(pvda.op1.m1, pvda.op1.m2,
+    title = "Regression model for PvdA support in the 2018 Amsterdam municipal election",
+    #TODO: may need to place footnote on exact def of other african etc.
+    order = c("housing_pub", "imm_TMSA", "imm_other",
+              "edu_low", "edu_high", "age_18t26", "age_66plus", "unempl",
+              "housing_pub_delta2013", "netincome_delta2013"),
+    covariate.labels = c(" public housing", " Turkish, Moroccan, Surinamese, Antillean",
+              " (other) African, Latin American \\& Asian", " lower educated",
+              " higher educated", " youth (18-26)", " elderly (66+)", " unemployed", 
+              "Change in  public housing", "Change in average net income"),
+    star.cutoffs = c(0.05, 0.01, 0.001),
+    omit.stat = c("f", "ser"),
+    out = "pvda_gentr_4years.html")
+  
+  # TODO: remove old code
+  #wordreg(l = list(pvda.op1.m1, pvda.op1.m2), file = "pvda_gentr_4years.doc", 
+  #        groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
   
   
 # Analysis: turnout ------------------------------------------------------------------------------------------------- 
@@ -374,12 +399,15 @@ par(mfrow = c(2, 2))
 plot(pvda.op1.m2)
 dev.off()
 
-# Robustness check 2: removing outliers -----------------------------------------------------------------------------
+# Robustness check 2: analysis including outliers -----------------------------------------------------------------------------
 
 # OUTLIER IN PUBLIC HOUSING CHANGE
 
-# Drop one observation with very great change in public housing
-data.pvda.op1.outliers <- data.pvda.op1 %>% filter(housing_pub_delta2013 > -20)
+# Prepare data
+data.pvda.op1.outliers <- select(subdata, c(bc_code, bc_name, PVDA, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                 edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                 housing_pub_delta2013, netincome_delta2013))
+data.pvda.op1.outliers <- data.pvda.op1[complete.cases(data.pvda.op1),]
 
 # Model 1: composition effects
 pvda.op1.m1.outliers <- lm(PVDA ~ housing_pub 
@@ -402,38 +430,15 @@ wordreg(l = list(pvda.op1.m1.outliers, pvda.op1.m2.outliers), file = "pvda_outli
   #NOTE: without public housing outlier, the effect is slightly bigger;
   # with: b = 0.08, not significant
   # without: b = 0.13, one star significance
-
-
-# OUTLIERS IN NET INCOME CHANGE
-
-# Drop CLUSTER of observation with very great change in netincome
-# NOTE: theoretically, this does not sound like it makes much sense
-data.pvda.op1.outliers.income <- data.pvda.op1 %>% filter(netincome_delta2013 < 15)
-
-# Model 1: composition effects
-pvda.op1.m1.outliers.income <- lm(PVDA ~ housing_pub
-                           + imm_TMSA + imm_other +
-                             + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
-                           data = data.pvda.op1.outliers.income)
-summary(pvda.op1.m1.outliers.income)
-
-# Model 2: add gentrification
-pvda.op1.m2.outliers.income <- lm(PVDA ~ housing_pub
-                          + imm_TMSA + imm_other +
-                            + edu_low + edu_high + age_18t26 + age_66plus + unempl
-                          + housing_pub_delta2013 + netincome_delta2013, 
-                          data = data.pvda.op1.outliers.income)
-summary(pvda.op1.m2.outliers.income)
-
-wordreg(l = list(pvda.op1.m1.outliers.income, pvda.op1.m2.outliers.income), file = "pvda_outlier_netincome.doc") 
-#groups = list("Neighbourhood composition" = 2:10, "Gentrification" = 11:12, "Interaction effects" = 13:14))
-
-#NOTE: does not change effect size, do not remove
+  #TODO: remove note
 
 # OUTLIER IN TURNOUT 
 
-# Drop one observation with turnout over 100%
-data.turn.op1.outliers <- data.turn.op1 %>% filter(turnout < 100)
+#Prepare data
+data.turn.op1.outliers <- select(subdata, c(bc_code, bc_name, turnout, housing_pub, netHHincome, imm_TMSA, imm_other,
+                                   edu_low, edu_high, age_18t26, age_66plus, unempl,
+                                   housing_pub_delta2013, netincome_delta2013))
+data.turn.op1.outliers <- data.turn.op1[complete.cases(data.turn.op1),]
 
 # Model 1: composition effects
 turn.op1.m1.outliers <- lm(turnout ~ housing_pub 
@@ -452,36 +457,12 @@ summary(turn.op1.m2.outliers)
 
 wordreg(l = list(turn.op1.m1.outliers, turn.op1.m2.outliers), file = "turn_outlier.doc")  
  
-  #NOTE: effect of change in pub housing turns smaller, (0.57 to 0.30), no longer significant
-  # effect of change in net income CHANGES SIGN (0.33 to -0.23)
-    # both not significant
-    # excluding the outlier makes effect in line with hypothesis
-
-  
-# Drop one observation with turnout over 100%
-data.turn.op1.outliers.housing <- data.turn.op1 %>% filter(turnout < 100 & housing_pub_delta2013 > -20)
-
-# Model 1: composition effects
-turn.op1.m1.outliers.housing <- lm(turnout ~ housing_pub 
-                           + imm_TMSA + imm_other +
-                             + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
-                           data = data.turn.op1.outliers.housing)
-summary(turn.op1.m1.outliers.housing)
-
-# Model 2: add gentrification
-turn.op1.m2.outliers.housing <- lm(turnout ~ housing_pub 
-                           + imm_TMSA + imm_other +
-                             + edu_low + edu_high + age_18t26 + age_66plus + unempl
-                           + housing_pub_delta2013 + netincome_delta2013, 
-                           data = data.turn.op1.outliers.housing)
-summary(turn.op1.m2.outliers.housing)
-
-wordreg(l = list(turn.op1.m1.outliers.housing, turn.op1.m2.outliers.housing), file = "turn_housing_outlier.doc") 
   
   #NOTE: effect of change in pub housing turns smaller, (0.57 to 0.24), no longer significant
   # effect of change in net income CHANGES SIGN (0.33 to -0.23)
     # both not significant
     # excluding the outlier makes effect in line with hypothesis
+  #TODO: remove note
 
 # Multicollinearity ------------------------------------------------------------------
 
