@@ -183,13 +183,13 @@ library(stargazer)    #exporting regression tables
 
 # OPTION 1 - Gentrification as change over 4 years (2013-2017)
   # Model 1: composition effects
-  pvda.op1.m1 <- lm(PVDA ~ housing_pub + imm_TMSA + imm_other +
+  pvda.op1.m1 <- lm(PVDA ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                     data = data.pvda.op1)
   summary(pvda.op1.m1)
   
   # Model 2: add gentrification
-  pvda.op1.m2 <- lm(PVDA ~ housing_pub + imm_TMSA + imm_other +
+  pvda.op1.m2 <- lm(PVDA ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                    edu_low + edu_high + age_18t26 + age_66plus + unempl +
                    housing_pub_delta2013 + netincome_delta2013, 
                    data = data.pvda.op1)
@@ -201,7 +201,7 @@ library(stargazer)    #exporting regression tables
     title = "Regression model for PvdA support in the 2018 Amsterdam municipal election",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
-    covariate.labels = c("% public housing", "% Turkish, Moroccan, Surinamese, Antillean",
+    covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
               "% (other) African, Latin American, Asian", "% lower educated",
               "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
               "Change in  public housing", "Change in average net income"),
@@ -216,13 +216,13 @@ library(stargazer)    #exporting regression tables
   
 # OPTION 1 - Gentrification as change over 4 years (2013-2017)
   # Model 1: composition effects
-  turn.op1.m1 <- lm(turnout ~ housing_pub + imm_TMSA + imm_other +
+  turn.op1.m1 <- lm(turnout ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                   edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                   data = data.turn.op1)
   summary(turn.op1.m1)
   
   # Model 2: add gentrification (change variables)
-  turn.op1.m2 <- lm(turnout ~ housing_pub + imm_TMSA + imm_other +
+  turn.op1.m2 <- lm(turnout ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl +
                     housing_pub_delta2013 + netincome_delta2013, 
                     data = data.turn.op1)
@@ -235,7 +235,7 @@ library(stargazer)    #exporting regression tables
     title = "Regression model for turnout in the 2018 Amsterdam municipal election",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
-    covariate.labels = c("% public housing", "% Turkish, Moroccan, Surinamese, Antillean",
+    covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                          "Change in  public housing", "Change in average net income"),
@@ -252,13 +252,13 @@ library(stargazer)    #exporting regression tables
   
   # OPTION 2 - Gentrification as change over 8 years (2009-2017)
   # Model 1: composition effects
-  pvda.op2.m1 <- lm(PVDA ~ housing_pub + imm_TMSA + imm_other +
+  pvda.op2.m1 <- lm(PVDA ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                     data = data.pvda.op2)
   summary(pvda.op2.m1)
   
   # Model 2: add gentrification (change variables)
-  pvda.op2.m2 <- lm(PVDA ~ housing_pub + imm_TMSA + imm_other +
+  pvda.op2.m2 <- lm(PVDA ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl + 
                     housing_pub_delta2009 + netincome_delta2009, 
                     data = data.pvda.op2)
@@ -269,7 +269,7 @@ library(stargazer)    #exporting regression tables
     title = "Regression model for PvdA support with gentrification defined as 8-year change",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
-    covariate.labels = c("% public housing", "% Turkish, Moroccan, Surinamese, Antillean",
+    covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                          "Change in  public housing (2009-2017)", "Change in average net income (2009-2017)"),
@@ -282,13 +282,13 @@ library(stargazer)    #exporting regression tables
   
   # OPTION 3 - Gentrification as change over 12 years (2005-2017)
   # Model 1: composition effects
-  pvda.op3.m1 <- lm(PVDA ~ housing_pub + imm_TMSA + imm_other +
+  pvda.op3.m1 <- lm(PVDA ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                     data = data.pvda.op3)
   summary(pvda.op3.m1)
 
   # Model 2: add gentrification (change variables)
-  pvda.op3.m2 <- lm(PVDA ~ housing_pub + imm_TMSA + imm_other +
+  pvda.op3.m2 <- lm(PVDA ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl + 
                     housing_pub_delta2005 + netincome_delta2005, 
                     data = data.pvda.op3)
@@ -299,7 +299,7 @@ library(stargazer)    #exporting regression tables
     title = "Regression model for PvdA support with gentrification defined as 12-year change",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
-    covariate.labels = c("% public housing", "% Turkish, Moroccan, Surinamese, Antillean",
+    covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                          "Change in  public housing (2005-2017)", "Change in average net income (2005-2017)"),
@@ -314,13 +314,13 @@ library(stargazer)    #exporting regression tables
   
   # OPTION 2 - Gentrification as change over 8 years (2009-2017)
   # Model 1: composition effects
-  turn.op2.m1 <- lm(turnout ~ housing_pub + imm_TMSA + imm_other +
+  turn.op2.m1 <- lm(turnout ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                     data = data.turn.op2)
   summary(turn.op2.m1)
   
   # Model 2: add gentrification (change variables)
-  turn.op2.m2 <- lm(turnout ~ housing_pub + imm_TMSA + imm_other +
+  turn.op2.m2 <- lm(turnout ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl +
                     housing_pub_delta2009 + netincome_delta2009, 
                     data = data.turn.op2)
@@ -331,7 +331,7 @@ library(stargazer)    #exporting regression tables
     title = "Regression model for turnout with gentrification defined as 8-year change",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
-    covariate.labels = c("% public housing", "% Turkish, Moroccan, Surinamese, Antillean",
+    covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                          "Change in  public housing (2009-2017)", "Change in average net income (2009-2017)"),
@@ -344,13 +344,13 @@ library(stargazer)    #exporting regression tables
 
   # OPTION 3 - Gentrification as change over 12 years (2005-2017)
   # Model 1: composition effects
-  turn.op3.m1 <- lm(turnout ~ housing_pub + imm_TMSA + imm_other +
+  turn.op3.m1 <- lm(turnout ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                     data = data.turn.op3)
   summary(turn.op3.m1)
   
   # Model 2: add gentrification (change variables)
-  turn.op3.m2 <- lm(turnout ~ housing_pub + imm_TMSA + imm_other +
+  turn.op3.m2 <- lm(turnout ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                     edu_low + edu_high + age_18t26 + age_66plus + unempl + 
                     housing_pub_delta2005 + netincome_delta2005, 
                     data = data.turn.op3)
@@ -361,7 +361,7 @@ library(stargazer)    #exporting regression tables
     title = "Regression model for turnout with gentrification defined as 12-year change",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
-    covariate.labels = c("% public housing", "% Turkish, Moroccan, Surinamese, Antillean",
+    covariate.labels = c("% public housing","Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                          "Change in  public housing (2005-2017)", "Change in average net income (2005-2017)"),
@@ -450,13 +450,13 @@ data.pvda.op1.outliers <- select(subdata, c(bc_code, bc_name, PVDA, housing_pub,
 data.pvda.op1.outliers <- data.pvda.op1.outliers[complete.cases(data.pvda.op1.outliers),]
 
 # Model 1: composition effects
-pvda.op1.m1.outliers <- lm(PVDA ~ housing_pub + imm_TMSA + imm_other +
+pvda.op1.m1.outliers <- lm(PVDA ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                            edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                   data = data.pvda.op1.outliers)
 summary(pvda.op1.m1.outliers)
 
 # Model 2: add gentrification
-pvda.op1.m2.outliers <- lm(PVDA ~ housing_pub + imm_TMSA + imm_other +
+pvda.op1.m2.outliers <- lm(PVDA ~ housing_pub + netHHincome + imm_TMSA + imm_other +
                            edu_low + edu_high + age_18t26 + age_66plus + unempl + 
                            housing_pub_delta2013 + netincome_delta2013, 
                   data = data.pvda.op1.outliers)
@@ -467,7 +467,7 @@ stargazer(pvda.op1.m1.outliers, pvda.op1.m2.outliers,
   title = "Regression model for PvdA support in the 2018 Amsterdam municipal election, \\textit{including outliers}",
   #TODO: may need to place footnote on exact def of other african etc.
   #NOTE: ordering of variables somehow incorrectly changes display of coefs
-  covariate.labels = c("% public housing", "% Turkish, Moroccan, Surinamese, Antillean",
+  covariate.labels = c("% public housing","Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                        "% (other) African, Latin American, Asian", "% lower educated",
                        "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                        "Change in  public housing", "Change in average net income"),
@@ -492,17 +492,15 @@ data.turn.op1.outliers <- select(subdata, c(bc_code, bc_name, turnout, housing_p
 data.turn.op1.outliers <- data.turn.op1.outliers[complete.cases(data.turn.op1.outliers),]
 
 # Model 1: composition effects
-turn.op1.m1.outliers <- lm(turnout ~ housing_pub 
-                           + imm_TMSA + imm_other +
-                             + edu_low + edu_high + age_18t26 + age_66plus + unempl, 
+turn.op1.m1.outliers <- lm(turnout ~ housing_pub + netHHincome + imm_TMSA + imm_other +
+                           edu_low + edu_high + age_18t26 + age_66plus + unempl, 
                            data = data.turn.op1.outliers)
 summary(turn.op1.m1.outliers)
 
 # Model 2: add gentrification
-turn.op1.m2.outliers <- lm(turnout ~ housing_pub 
-                           + imm_TMSA + imm_other +
-                             + edu_low + edu_high + age_18t26 + age_66plus + unempl
-                           + housing_pub_delta2013 + netincome_delta2013, 
+turn.op1.m2.outliers <- lm(turnout ~ housing_pub + netHHincome + imm_TMSA + imm_other +
+                           edu_low + edu_high + age_18t26 + age_66plus + unempl +
+                           housing_pub_delta2013 + netincome_delta2013, 
                            data = data.turn.op1.outliers)
 summary(turn.op1.m2.outliers)
 
@@ -511,7 +509,7 @@ stargazer(turn.op1.m1.outliers, turn.op1.m2.outliers,
     title = "Regression model for turnout in the 2018 Amsterdam municipal election, \\textit{including outliers}",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
-    covariate.labels = c("% public housing", "% Turkish, Moroccan, Surinamese, Antillean",
+    covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                          "Change in  public housing", "Change in average net income"),
