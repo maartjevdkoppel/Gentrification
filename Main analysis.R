@@ -38,6 +38,9 @@ library(emmeans)
 library(sf)           #reading shapefiles
 library(RColorBrewer) #colour scales for maps
 library(stargazer)    #exporting regression tables
+library(car)          #calculating variance inflation factors
+library(vtable)       #descriptive statistics table
+library(expss)        #variable labelling functions
 
 # Import data -------------------------------------------------------------------------------------------------------
 
@@ -178,6 +181,24 @@ library(stargazer)    #exporting regression tables
   # Also drop one observation with turnout over 100%
   data.turn.op1 <- data.turn.op1 %>% filter(turnout < 100 & housing_pub_delta2013 > -20)
   
+# Descriptive statistics ----------------------------------------------------------------------
+  
+  table_data <- expss::unvr(subdata)
+  
+  sumtable(table_data,
+           vars = c("turnout", "PVDA",
+                    "housing_pub_delta2013", "netincome_delta2013",
+                    "housing_pub", "netHHincome",
+                    "imm_TMSA", "imm_other", "age_18t26", "age_66plus",
+                    "unepl", "edu_high", "edu_low"),
+           labels = c("Turnout", "PvdA vote share",
+                      "Change in % public housing", "Change in average net income per household",
+                      "% public housing", "Average net income per household",
+                      "% inhabitants with Turkish, Moroccan, Surinamese or Antillean background",
+                      "% inhabitants with (other) African, Latin American or Asian background",
+                      "% youth (18-26)", "% elderly (66+)", "% unemployed inhabitants"),
+           summ = c("mean(x)", "sd(x)", "min(x)", "max(x)"),
+           )
   
 # Analysis: PVDA ------------------------------------------------------------------------------------------------- 
 
@@ -198,19 +219,32 @@ library(stargazer)    #exporting regression tables
   # Export regression table
   #TODO: FIX, currently order of coefficients is off!
   stargazer(pvda.op1.m1, pvda.op1.m2,
-    title = "Regression model for PvdA support in the 2018 Amsterdam municipal election",
+    title = "OLS regression model for PvdA support in the 2018 Amsterdam municipal election",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
     covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
               "% (other) African, Latin American, Asian", "% lower educated",
               "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
-              "Change in  public housing", "Change in average net income"),
+              "Change in  % public housing", "Change in average net income"),
     dep.var.labels = "PvdA vote share",
     column.labels = c("Model 1", "Model 2"),
     model.numbers = FALSE,
     star.cutoffs = c(0.05, 0.01, 0.001),
     omit.stat = c("f", "ser"),
+    single.row = TRUE,
     out = "pvda_gentr_4years.html")
+  
+  # Effect size
+  # in standard deviations
+  pvda.op1.m2$coefficients[["housing_pub_delta2013"]]*sd(data.pvda.op1$housing_pub_delta2013)/sd(data.pvda.op1$PVDA)
+  # compare extreme ends in data
+  diff(range(data.pvda.op1$housing_pub_delta2013))*pvda.op1.m2$coefficients[["housing_pub_delta2013"]]
+  
+  # in standard deviations
+  pvda.op1.m2$coefficients[["netincome_delta2013"]]*sd(data.pvda.op1$netincome_delta2013)/sd(data.pvda.op1$PVDA)
+  # compare extreme ends in data
+  diff(range(data.pvda.op1$netincome_delta2013))*pvda.op1.m2$coefficients[["netincome_delta2013"]]
+  
   
 # Analysis: turnout ------------------------------------------------------------------------------------------------- 
   
@@ -232,20 +266,27 @@ library(stargazer)    #exporting regression tables
   # Export regression table
   #TODO: FIX, currently order of coefficients is off!
   stargazer(turn.op1.m1, turn.op1.m2,
-    title = "Regression model for turnout in the 2018 Amsterdam municipal election",
+    title = "OLS regression model for turnout in the 2018 Amsterdam municipal election",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
     covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
-                         "Change in  public housing", "Change in average net income"),
+                         "Change in  % public housing", "Change in average net income"),
     dep.var.labels = "Turnout",
     column.labels = c("Model 1", "Model 2"),
     model.numbers = FALSE,
     star.cutoffs = c(0.05, 0.01, 0.001),
     omit.stat = c("f", "ser"),
+    single.row = TRUE,
     out = "turnout_gentr_4years.html")
-
+  
+# Effect size
+  # in standard deviations
+  turn.op1.m2$coefficients[["housing_pub_delta2013"]]*sd(data.turn.op1$housing_pub_delta2013)/sd(data.turn.op1$turnout)
+  # compare extreme ends in data
+  diff(range(data.turn.op1$housing_pub_delta2013))*turn.op1.m2$coefficients[["housing_pub_delta2013"]]
+  
 # Robustness check 1: alternative gentrification definition ----------------------------------------------------------------
   
 # PVDA models
@@ -272,7 +313,7 @@ library(stargazer)    #exporting regression tables
     covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
-                         "Change in  public housing (2009-2017)", "Change in average net income (2009-2017)"),
+                         "Change in  % public housing (2009-2017)", "Change in average net income (2009-2017)"),
     dep.var.labels = "PvdA vote share",
     column.labels = c("Model 1", "Model 2"),
     model.numbers = FALSE,
@@ -302,7 +343,7 @@ library(stargazer)    #exporting regression tables
     covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
-                         "Change in  public housing (2005-2017)", "Change in average net income (2005-2017)"),
+                         "Change in  % public housing (2005-2017)", "Change in average net income (2005-2017)"),
     dep.var.labels = "PvdA vote share",
     column.labels = c("Model 1", "Model 2"),
     model.numbers = FALSE,
@@ -334,7 +375,7 @@ library(stargazer)    #exporting regression tables
     covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
-                         "Change in  public housing (2009-2017)", "Change in average net income (2009-2017)"),
+                         "Change in  % public housing (2009-2017)", "Change in average net income (2009-2017)"),
     dep.var.labels = "Turnout",
     column.labels = c("Model 1", "Model 2"),
     model.numbers = FALSE,
@@ -364,7 +405,7 @@ library(stargazer)    #exporting regression tables
     covariate.labels = c("% public housing","Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
-                         "Change in  public housing (2005-2017)", "Change in average net income (2005-2017)"),
+                         "Change in  % public housing (2005-2017)", "Change in average net income (2005-2017)"),
     dep.var.labels = "Turnout",
     column.labels = c("Model 1", "Model 2"),
     model.numbers = FALSE,
@@ -439,6 +480,11 @@ par(mfrow = c(2, 2))
 plot(pvda.op1.m2)
 dev.off()
 
+jpeg("turnout_diagnostic plots.jpg", width = 750, height = 750)
+par(mfrow = c(2, 2))
+plot(turn.op1.m2)
+dev.off()
+
 # Robustness check 2: analysis including outliers -----------------------------------------------------------------------------
 
 # OUTLIER IN PUBLIC HOUSING CHANGE
@@ -470,7 +516,7 @@ stargazer(pvda.op1.m1.outliers, pvda.op1.m2.outliers,
   covariate.labels = c("% public housing","Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                        "% (other) African, Latin American, Asian", "% lower educated",
                        "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
-                       "Change in  public housing", "Change in average net income"),
+                       "Change in  % public housing", "Change in average net income"),
   dep.var.labels = "PvdA vote share",
   column.labels = c("Model 1", "Model 2"),
   model.numbers = FALSE,
@@ -512,7 +558,7 @@ stargazer(turn.op1.m1.outliers, turn.op1.m2.outliers,
     covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
                          "% (other) African, Latin American, Asian", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
-                         "Change in  public housing", "Change in average net income"),
+                         "Change in  % public housing", "Change in average net income"),
     dep.var.labels = "Turnout",
     column.labels = c("Model 1", "Model 2"),
     model.numbers = FALSE,
@@ -528,13 +574,16 @@ stargazer(turn.op1.m1.outliers, turn.op1.m2.outliers,
 
 # Multicollinearity ------------------------------------------------------------------
 
+#VIF scores
+vif(pvda.op1.m2)
+vif(turn.op1.m2)
+
+#TODO: remove code?
 #Check correlations of independent variables
 iv <- select(subdata, housing_pub, netHHincome, imm_TMSA, imm_other, 
              edu_low, edu_high, age_18t26, age_66plus, unempl, housing_pub_delta2013, netincome_delta2013)
 
 cor.matrix <- cor(iv, use = "complete.obs")
-
-  #TODO: NOTE: possible multicollinearity nethhincome & netincome_delta2013
 
 #Correlation plot
 library(corrplot)
