@@ -190,14 +190,19 @@ library(expss)        #variable labelling functions
                     "housing_pub_delta2013", "netincome_delta2013",
                     "housing_pub", "netHHincome",
                     "imm_TMSA", "imm_other", "age_18t26", "age_66plus",
-                    "unepl", "edu_high", "edu_low"),
+                    "unempl", "edu_high", "edu_low"),
            labels = c("Turnout", "PvdA vote share",
                       "Change in % public housing", "Change in average net income per household",
                       "% public housing", "Average net income per household",
                       "% inhabitants with Turkish, Moroccan, Surinamese or Antillean background",
                       "% inhabitants with (other) African, Latin American or Asian background",
-                      "% youth (18-26)", "% elderly (66+)", "% unemployed inhabitants"),
+                      "% youth (18-26)", "% elderly (66+)", "% unemployed inhabitants",
+                      "% inhabitants with lower education", "% inhabitants with higher education"),
            summ = c("mean(x)", "sd(x)", "min(x)", "max(x)"),
+           title = "Descriptive statistics",
+           note = "Note: Data from O&S Amsterdam.",
+           digits = 3,
+           out = "browser"
            )
   
 # Analysis: PVDA ------------------------------------------------------------------------------------------------- 
