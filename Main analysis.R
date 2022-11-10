@@ -92,7 +92,7 @@ library(rempsyc)
   
   #Export t-test table
   t.test_table <- nice_table(t.test.results)
-  
+  save_as_docx(t.test_table, path = "t-tests.docx")
   
   
 # Check if manually combined neighbourhoods are significantly different
