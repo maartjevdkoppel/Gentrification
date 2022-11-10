@@ -41,6 +41,7 @@ library(stargazer)    #exporting regression tables
 library(car)          #calculating variance inflation factors
 library(vtable)       #descriptive statistics table
 library(expss)        #variable labelling functions
+library(rempsyc)
 
 # Import data -------------------------------------------------------------------------------------------------------
 
@@ -79,40 +80,28 @@ library(expss)        #variable labelling functions
    # need at least 50 respondents in a neighbourhood
 
 # Check if neighbourhoods with missing data on social housing are significantly different
-  subdata$missing_housing_soc <- ifelse(is.na(subdata$housing_soc) | is.na(subdata$housing_soc_delta2005) |
-                                        is.na(subdata$housing_soc_delta2009) | is.na(subdata$housing_soc_delta2013), 1, 0)
-  fre(subdata$missing_housing_soc) # 25.3% (21 out of 83 neighbourhoods) is missing on this variable 
+  subdata$missing_housing_soc <- ifelse(is.na(subdata$housing_soc_delta2013), 1, 0)
+  fre(subdata$missing_housing_soc)
   
-  # On the dependent variables 
-  t.test(PVDA      ~ missing_housing_soc, data = subdata, alternative = "two.sided")
-  t.test(MCparties ~ missing_housing_soc, data = subdata, alternative = "two.sided")
-  t.test(turnout   ~ missing_housing_soc, data = subdata, alternative = "two.sided")
+  t.test.results <- nice_t_test(data = subdata,
+                      response = c("turnout", "PVDA", "housing_pub_delta2013", "netincome_delta2013",
+                                   "housing_pub", "netHHincome", "imm_TMSA", "imm_other",
+                                   "age_18t26", "age_66plus", "unempl", "edu_low", "edu_high"),
+                      group = "missing_housing_soc",
+                      warning = TRUE)
   
-  # On the main predictors 
-  t.test(imm_TMSA              ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
-  t.test(netincome_delta2005   ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
-  t.test(netincome_delta2009   ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
-  t.test(netincome_delta2013   ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
-  t.test(housing_pub_delta2013 ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different   
+  #Export t-test table
+  t.test_table <- nice_table(t.test.results)
   
-  # On the control variables
-  t.test(imm_other   ~ missing_housing_soc, data = subdata, alternative = "two.sided")
-  t.test(age_18t26   ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
-  t.test(age_66plus  ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
-  t.test(edu_low     ~ missing_housing_soc, data = subdata, alternative = "two.sided")
-  t.test(edu_high    ~ missing_housing_soc, data = subdata, alternative = "two.sided")
-  t.test(housing_soc ~ missing_housing_soc, data = subdata, alternative = "two.sided")
-  t.test(housing_pub ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
-  t.test(unempl      ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
-  t.test(netHHincome ~ missing_housing_soc, data = subdata, alternative = "two.sided") # significantly different
+  
   
 # Check if manually combined neighbourhoods are significantly different
-  # On the dependent variables - no significant differences
+  # On the dependent variables 
   t.test(PVDA      ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(MCparties ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(turnout   ~ bc_combined, data = subdata, alternative = "two.sided")
   
-  # On the main predictors - no significant differences
+  # On the independent variables
   t.test(imm_TMSA              ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(netincome_delta2005   ~ bc_combined, data = subdata, alternative = "two.sided") 
   t.test(netincome_delta2009   ~ bc_combined, data = subdata, alternative = "two.sided") 
@@ -120,8 +109,6 @@ library(expss)        #variable labelling functions
   t.test(housing_pub_delta2005 ~ bc_combined, data = subdata, alternative = "two.sided") 
   t.test(housing_pub_delta2009 ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(housing_pub_delta2013 ~ bc_combined, data = subdata, alternative = "two.sided")   
-   
-  # On the control variables - no significant differences
   t.test(imm_other   ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(age_18t26   ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(age_66plus  ~ bc_combined, data = subdata, alternative = "two.sided")
@@ -131,6 +118,7 @@ library(expss)        #variable labelling functions
   t.test(housing_pub ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(unempl      ~ bc_combined, data = subdata, alternative = "two.sided")
   t.test(netHHincome ~ bc_combined, data = subdata, alternative = "two.sided")
+  
   
 # Create separate databases, so observations with missings can be removed
 #TODO: is this needed?
@@ -515,7 +503,7 @@ summary(pvda.op1.m2.outliers)
 
 # Export regression table
 stargazer(pvda.op1.m1.outliers, pvda.op1.m2.outliers,
-  title = "Regression model for PvdA support in the 2018 Amsterdam municipal election, \\textit{including outliers}",
+  title = "OLS regression model for PvdA support in the 2018 Amsterdam municipal election, \\textit{including outliers}",
   #TODO: may need to place footnote on exact def of other african etc.
   #NOTE: ordering of variables somehow incorrectly changes display of coefs
   covariate.labels = c("% public housing","Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
@@ -527,6 +515,7 @@ stargazer(pvda.op1.m1.outliers, pvda.op1.m2.outliers,
   model.numbers = FALSE,
   star.cutoffs = c(0.05, 0.01, 0.001),
   omit.stat = c("f", "ser"),
+  single.row = TRUE, 
   out = "pvda_outliers.html")
 
   #NOTE: without public housing outlier, the effect is slightly bigger;
@@ -557,7 +546,7 @@ summary(turn.op1.m2.outliers)
 
 # Export regression table 
 stargazer(turn.op1.m1.outliers, turn.op1.m2.outliers,
-    title = "Regression model for turnout in the 2018 Amsterdam municipal election, \\textit{including outliers}",
+    title = "OLS regression model for turnout in the 2018 Amsterdam municipal election, \\textit{including outliers}",
     #TODO: may need to place footnote on exact def of other african etc.
     #NOTE: ordering of variables somehow incorrectly changes display of coefs
     covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
@@ -569,6 +558,7 @@ stargazer(turn.op1.m1.outliers, turn.op1.m2.outliers,
     model.numbers = FALSE,
     star.cutoffs = c(0.05, 0.01, 0.001),
     omit.stat = c("f", "ser"),
+    single.row = TRUE,
     out = "turnout_outliers.html")
   
   #NOTE: effect of change in pub housing turns smaller, (0.57 to 0.24), no longer significant
