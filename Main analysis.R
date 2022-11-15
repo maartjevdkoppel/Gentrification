@@ -21,30 +21,20 @@ setwd("/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Link-Jong-Amsterdam/
   # grant permission with gpclibPermit()
 #TODO: remove all old mapmaking packages, also new because moved to another script?
 
-library(maptools)     #map making
-library(rgdal)        #reading shapefiles for map making
-library(gpclib)       #dependency rgdal
-library(broom)        #tidying shapefiles to dataframe
-library(raster)     
 library(foreign) 
 library(tidyverse)    #tidyverse collection
 library(ggplot2)
 library(readxl)
 library(dplyr)
-library(plyr)         #TODO: needed for join function?
 library(stats)
 library(tidyr)       
-library(expss)
-library(mctest)
-library(texreg)       #exporting regression tables to word
-library(emmeans)
-library(sf)           #reading shapefiles
-library(RColorBrewer) #colour scales for maps
 library(stargazer)    #exporting regression tables
 library(car)          #calculating variance inflation factors
 library(vtable)       #descriptive statistics table
 library(expss)        #variable labelling functions
-library(rempsyc)      #t-test tables
+#library(rempsyc)     #t-test tables
+library(broom)        #cleaning t-test results
+library(purrr)        #cleaning t-test results
 
 # Import data -------------------------------------------------------------------------------------------------------
 
@@ -60,8 +50,6 @@ subdata <- fulldata[which(fulldata$year=='2018'), ]
 # Turkish, Moroccan, Surinamese & Antillean vs. other migration vs. no migration background
 subdata$imm_TMSA  <- subdata$imm_Tur + subdata$imm_Mar + subdata$imm_Sur + subdata$imm_Ant
 subdata$imm_other <- subdata$imm_otherNW + subdata$imm_W
-#TODO: check if description of migration variables (esp. imm_other) in paper
-#corresponds with definition here
 
 var_lab(subdata$imm_TMSA)  = "% Turkish, Moroccan, Surinamese or Antillean migration background"
 var_lab(subdata$imm_other) = "% Other migration background"
@@ -69,32 +57,71 @@ var_lab(subdata$imm_other) = "% Other migration background"
 #Check if neighbourhoods with missing data on social housing are significantly different
 #Create variable to identify observations with missing values on change in social housing
 subdata$missing_housing_soc <- ifelse(is.na(subdata$housing_soc_delta2013), 1, 0)
-fre(subdata$missing_housing_soc)
 
-t.test.results <- nice_t_test(data = subdata,
-                              response = c("turnout", "PVDA", "housing_pub_delta2013", "netincome_delta2013",
-                                           "housing_pub", "netHHincome", "imm_TMSA", "imm_other",
-                                           "age_18t26", "age_66plus", "unempl", "edu_low", "edu_high"),
-                              group = "missing_housing_soc",
-                              warning = TRUE)
+#Perform t-tests
+t1  <- t.test(PVDA                  ~ missing_housing_soc, data = subdata, alternative = "two.sided")
+t2  <- t.test(turnout               ~ missing_housing_soc, data = subdata, alternative = "two.sided")
+t3  <- t.test(housing_pub_delta2013 ~ missing_housing_soc, data = subdata, alternative = "two.sided") 
+t4  <- t.test(netincome_delta2013   ~ missing_housing_soc, data = subdata, alternative = "two.sided") 
+t5  <- t.test(housing_pub           ~ missing_housing_soc, data = subdata, alternative = "two.sided") 
+t6  <- t.test(netHHincome           ~ missing_housing_soc, data = subdata, alternative = "two.sided") 
+t7  <- t.test(imm_TMSA              ~ missing_housing_soc, data = subdata, alternative = "two.sided")
+t8  <- t.test(imm_other             ~ missing_housing_soc, data = subdata, alternative = "two.sided")
+t9  <- t.test(age_18t26             ~ missing_housing_soc, data = subdata, alternative = "two.sided") 
+t10 <- t.test(age_66plus            ~ missing_housing_soc, data = subdata, alternative = "two.sided") 
+t11 <- t.test(edu_low               ~ missing_housing_soc, data = subdata, alternative = "two.sided")
+t12 <- t.test(edu_high              ~ missing_housing_soc, data = subdata, alternative = "two.sided")
+t13 <- t.test(unempl                ~ missing_housing_soc, data = subdata, alternative = "two.sided") 
 
-#Export t-test table
-t.test_table <- nice_table(t.test.results)
-save_as_docx(t.test_table, path = "t-tests.docx")
-  
+#List dependent variables
+var.names = c("PvdA vote share", "Turnout", 
+              "Change % public housing", "Change in avergae net income",
+              "% public housing", "Average net income",
+              "%Turkish, Moroccan, Surinamese, Antillean migration background", "% other migration background",
+              "% youth (18-26)", "% elderly (66+)", "% lower educated", "% higher educated", "% unemployed")
+
+#Gather all t-test results 
+t.tests <- map_df(list(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13), tidy)
+
+#Clean up table
+t.tests.table <- t.tests %>% 
+  mutate(variable = var.names,
+         p.value = ifelse(p.value < 0.001, "<.001", round(p.value, digits = 3)),
+         statistic = round(statistic, digits = 2),
+         parameter = round(parameter, digits = 2),
+         conf = paste0("[", round(conf.low, digits = 2), ", ", round(conf.high, digits = 2), "]")) %>%
+  select(c(variable, statistic, parameter, p.value, conf))
+
   
 # Check if manually combined neighbourhoods are significantly different
-t.test.results.combined <- nice_t_test(data = subdata,
-                                       response = c("turnout", "PVDA", "housing_pub_delta2013", "netincome_delta2013",
-                                                    "housing_pub", "netHHincome", "imm_TMSA", "imm_other",
-                                                    "age_18t26", "age_66plus", "unempl", "edu_low", "edu_high"),
-                                       group = "bc_combined",
-                                       warning = TRUE)
-          
-#Export t-test table
-t.test_table_combined <- nice_table(t.test.results.combined)
-save_as_docx(t.test_table_combined, path = "t-tests_combined_units.docx")
-  
+#Perform t-tests
+t14 <- t.test(PVDA                  ~ bc_combined, data = subdata, alternative = "two.sided")
+t15 <- t.test(turnout               ~ bc_combined, data = subdata, alternative = "two.sided")
+t16 <- t.test(housing_pub_delta2013 ~ bc_combined, data = subdata, alternative = "two.sided") 
+t17 <- t.test(netincome_delta2013   ~ bc_combined, data = subdata, alternative = "two.sided") 
+t18 <- t.test(housing_pub           ~ bc_combined, data = subdata, alternative = "two.sided") 
+t19 <- t.test(netHHincome           ~ bc_combined, data = subdata, alternative = "two.sided") 
+t20 <- t.test(imm_TMSA              ~ bc_combined, data = subdata, alternative = "two.sided")
+t21 <- t.test(imm_other             ~ bc_combined, data = subdata, alternative = "two.sided")
+t22 <- t.test(age_18t26             ~ bc_combined, data = subdata, alternative = "two.sided") 
+t23 <- t.test(age_66plus            ~ bc_combined, data = subdata, alternative = "two.sided") 
+t24 <- t.test(edu_low               ~ bc_combined, data = subdata, alternative = "two.sided")
+t25 <- t.test(edu_high              ~ bc_combined, data = subdata, alternative = "two.sided")
+t26 <- t.test(unempl                ~ bc_combined, data = subdata, alternative = "two.sided") 
+
+#Gather all t-test results 
+t.tests.combined <- map_df(list(t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26), tidy)
+
+#Clean up table
+t.tests.table.combined <- t.tests.combined %>% 
+  mutate(variable = var.names,
+         p.value = ifelse(p.value < 0.001, "<.001", round(p.value, digits = 3)),
+         statistic = round(statistic, digits = 2),
+         parameter = round(parameter, digits = 2),
+         conf = paste0("[", round(conf.low, digits = 2), ", ", round(conf.high, digits = 2), "]")) %>%
+  select(c(variable, statistic, parameter, p.value, conf))
+
+
 # Create separate databases to maximise number of observations for each model given missing values
   
 # PVDA option 1: gentrification over 4 years
@@ -144,10 +171,10 @@ sumtable(table_data,
          labels = c("Turnout", "PvdA vote share",
                     "Change in % public housing", "Change in average net income per household",
                     "% public housing", "Average net income per household",
-                    "% inhabitants with Turkish, Moroccan, Surinamese or Antillean background",
-                    "% inhabitants with (other) African, Latin American or Asian background",
+                    "% Turkish, Moroccan, Surinamese or Antillean background",
+                    "% other migration background",
                     "% youth (18-26)", "% elderly (66+)", "% unemployed inhabitants",
-                    "% inhabitants with lower education", "% inhabitants with higher education"),
+                    "% lower educated", "% higher educated"),
          summ = c("mean(x)", "sd(x)", "min(x)", "max(x)"),
          title = "Descriptive statistics",
          note = "Note: Data from O&S Amsterdam.",
@@ -175,8 +202,8 @@ summary(pvda.op1.m2)
 stargazer(pvda.op1.m1, pvda.op1.m2,
   title = "OLS regression model for PvdA support in the 2018 Amsterdam municipal election",
   #TODO: may need to place footnote on exact def of other african etc.
-  covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
-            "% (other) African, Latin American, Asian", "% lower educated",
+  covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean migration background",
+            "% other migration background", "% lower educated",
             "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
             "Change in  % public housing", "Change in average net income"),
   dep.var.labels = "PvdA vote share",
@@ -219,8 +246,8 @@ summary(turn.op1.m2)
 stargazer(turn.op1.m1, turn.op1.m2,
   title = "OLS regression model for turnout in the 2018 Amsterdam municipal election",
   #TODO: may need to place footnote on exact def of other african etc.
-  covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
-                       "% (other) African, Latin American, Asian", "% lower educated",
+  covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean migration background",
+                       "% other migration background", "% lower educated",
                        "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                        "Change in  % public housing", "Change in average net income"),
   dep.var.labels = "Turnout",
@@ -271,8 +298,8 @@ stargazer(pvda.op2.m1, pvda.op2.m2, pvda.op3.m2,
     title = "OLS regression model for PvdA support with gentrification defined as 8-year and 12-year change",
     #TODO: may need to place footnote on exact def of other african etc.
     covariate.labels = c("% public housing", "Average net income",
-                         "% Turkish, Moroccan, Surinamese, Antillean",
-                         "% (other) African, Latin American, Asian", "% lower educated",
+                         "% Turkish, Moroccan, Surinamese, Antillean migration background",
+                         "% other migration background", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                          "Change in % public housing (2009-2017)", "Change in average net income (2009-2017)", 
                          "Change in % public housing (2005-2017)", "Change in average net income (2005-2017)"),
@@ -312,8 +339,8 @@ stargazer(turn.op2.m1, turn.op2.m2, turn.op3.m2,
           title = "OLS regression model for turnout with gentrification defined as 8-year and 12-year change",
           #TODO: may need to place footnote on exact def of other african etc.
           covariate.labels = c("% public housing", "Average net income",
-                               "% Turkish, Moroccan, Surinamese, Antillean",
-                               "% (other) African, Latin American, Asian", "% lower educated",
+                               "% Turkish, Moroccan, Surinamese, Antillean migration background",
+                               "% other migration background", "% lower educated",
                                "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                                "Change in % public housing (2009-2017)", "Change in average net income (2009-2017)", 
                                "Change in % public housing (2005-2017)", "Change in average net income (2005-2017)"),
@@ -352,8 +379,8 @@ summary(pvda.op1.m2.outliers)
 stargazer(pvda.op1.m1.outliers, pvda.op1.m2.outliers,
   title = "OLS regression model for PvdA support in the 2018 Amsterdam municipal election, \\textit{including outliers}",
   #TODO: may need to place footnote on exact def of other african etc.
-  covariate.labels = c("% public housing","Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
-                       "% (other) African, Latin American, Asian", "% lower educated",
+  covariate.labels = c("% public housing","Average net income", "% Turkish, Moroccan, Surinamese, Antillean migration background",
+                       "% other migration background", "% lower educated",
                        "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                        "Change in  % public housing", "Change in average net income"),
   dep.var.labels = "PvdA vote share",
@@ -390,8 +417,8 @@ summary(turn.op1.m2.outliers)
 stargazer(turn.op1.m1.outliers, turn.op1.m2.outliers,
     title = "OLS regression model for turnout in the 2018 Amsterdam municipal election, \\textit{including outliers}",
     #TODO: may need to place footnote on exact def of other african etc.
-    covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean",
-                         "% (other) African, Latin American, Asian", "% lower educated",
+    covariate.labels = c("% public housing", "Average net income", "% Turkish, Moroccan, Surinamese, Antillean migration background",
+                         "% other migration background", "% lower educated",
                          "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                          "Change in  % public housing", "Change in average net income"),
     dep.var.labels = "Turnout",
@@ -430,8 +457,8 @@ stargazer(pvda.sochousing.m1, pvda.sochousing.m2,
           #TODO: consider if title can be shorter and better at explaining
           #TODO: may need to place footnote on exact def of other african etc.
           covariate.labels = c("% public housing", "Average net income", "% social housing",
-                               "% Turkish, Moroccan, Surinamese, Antillean",
-                               "% (other) African, Latin American, Asian", "% lower educated",
+                               "% Turkish, Moroccan, Surinamese, Antillean migration background",
+                               "% other migration background", "% lower educated",
                                "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                                "Change in  % public housing", "Change in average net income", "Change in % social housing"),
           dep.var.labels = "PvdA vote share",
@@ -475,8 +502,8 @@ stargazer(turnout.sochousing.m1, turnout.sochousing.m2,
           #TODO: consider if title can be shorter and better at explaining
           #TODO: may need to place footnote on exact def of other african etc.
           covariate.labels = c("% public housing", "Average net income", "% social housing",
-                               "% Turkish, Moroccan, Surinamese, Antillean",
-                               "% (other) African, Latin American, Asian", "% lower educated",
+                               "% Turkish, Moroccan, Surinamese, Antillean migration background",
+                               "% other migration background", "% lower educated",
                                "% higher educated", "% youth (18-26)", "% elderly (66+)", "% unemployed", 
                                "Change in  % public housing", "Change in average net income", "Change in % social housing"),
           dep.var.labels = "Turnout",
@@ -577,11 +604,11 @@ dev.off()
 
 
 #change in social housing var check
-iv_sochousing <- select(data.sochousing, housing_pub, housing_soc, netHHincome, imm_TMSA, imm_other, 
+iv_sochousing <- select(subdata, housing_pub, housing_soc, netHHincome, imm_TMSA, imm_other, 
              edu_low, edu_high, age_18t26, age_66plus, unempl, housing_pub_delta2013, netincome_delta2013,
              housing_soc_delta2013)
 
-cor.matrix_sochousing <- cor(iv_sochousing, use = "complete.obs")
+cor.matrix_sochousing <- cor(subdata, use = "complete.obs")
 
 library(corrplot)
 png("correlation_plot_socialhousing.png", width = 750, height = 750)
