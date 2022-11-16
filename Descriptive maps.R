@@ -346,11 +346,16 @@ geosubdata_pubhousing %>%
   #na.value = "gray",  #TODO: does not work yet
   #direction = -1) + #darker colours for higher turnout
   labs(title = "Change in corporation-owned (public) housing (2013-2017)", #TODO: consider removing
-       fill = "Change in %")
+       fill = "Change in percentage points")
 ggsave("map_publichousing_2013_2017.png", width = 2370, height = 1558, units = "px")
 
 
 # GENTRIFICATION: NET INCOME -------------------------------------------
+
+#Turn into percentage changes
+geosubdata <- geosubdata %>% mutate(netincome_delta2013 = (netincome_delta2013 / (netHHincome - netincome_delta2013))*100,
+                                    netincome_delta2009 = (netincome_delta2009 / (netHHincome - netincome_delta2009))*100,
+                                    netincome_delta2005 = (netincome_delta2005 / (netHHincome - netincome_delta2005))*100)
 
 # Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
 geosubdata_netincome <- subset(geosubdata, select=c(netincome_delta2013, geometry, bc_code))
@@ -371,8 +376,10 @@ geosubdata_netincome %>%
              ifelse(netincome_delta2013 < 5, "0-5",
                     ifelse(netincome_delta2013 < 10, "5-10",
                            ifelse(netincome_delta2013 < 15, "10-15",
-                                  ifelse(netincome_delta2013 < 20, "15-20", ">20")))),
-             levels = c("0-5", "5-10", "10-15", "15-20", ">20"),
+                                  ifelse(netincome_delta2013 < 20, "15-20", 
+                                         ifelse(netincome_delta2013 < 25, "20-25",
+                                                ifelse(netincome_delta2013 < 30, "25-30", ">30")))))),
+             levels = c("0-5", "5-10", "10-15", "15-20", "20-25", "25-30", ">30"),
              ordered = TRUE)) %>%
   ggplot() + 
   geom_sf(mapping = aes(fill = netincome_factor),
@@ -381,7 +388,7 @@ geosubdata_netincome %>%
   scale_fill_brewer(palette = "Blues", #income in blue
                     na.value = "grey") +  #TODO:does not work yet
   labs(title = "Change in average net income per household (2013-2017)", #TODO: consider removing
-       fill = "Change in %")
+       fill = "Percentage change")
 ggsave("map_netincome_2013_2017.png", width = 2370, height = 1558, units = "px")
 
 # PVDA 2018 MAP -----------------------------------------------------------
@@ -401,10 +408,11 @@ geosubdata_pvda %>%
   #Turn continuous variable into factor for clearer plotting
   mutate(pvda_factor = 
            factor(
-             ifelse(PVDA < 10, "5-10",
-                    ifelse(PVDA < 15, "10-15",
-                           ifelse(PVDA < 20, "15-20","20-25"))),
-             levels = c("20-25", "15-20", "10-15", "5-10"), #reverse order to list high numbers first in legend
+             ifelse(PVDA < 7.5, "5-7.5",
+                    ifelse(PVDA < 10, "7.5-10",
+                           ifelse(PVDA < 12.5, "10-12.5", 
+                                  ifelse(PVDA < 15, "12.5-15", ">15")))),
+             levels = c(">15", "12.5-15", "10-12.5", "7.5-10", "5-7.5"), #reverse order to list high numbers first in legend
              ordered = TRUE)) %>%
   ggplot() + 
   geom_sf(mapping = aes(fill = pvda_factor),
@@ -413,9 +421,44 @@ geosubdata_pvda %>%
   scale_fill_brewer(palette = "Blues", #income in blue
                     na.value = "grey", #TODO:does not work yet
                     direction = -1) +  #darker colours for higher pvda
-  labs(title = "Vote share attained by PvdA in the 2018 municipal elections", #TODO: consider removing
+  labs(#title = "Vote share attained by PvdA in the 2018 municipal elections", #TODO: consider removing
        fill = "Vote share in %")
 ggsave("map_2018_pvda.png", width = 2370, height = 1558, units = "px")
+
+# TURNOUT 2018 MAP ------------------------------------------------------------
+
+# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+geosubdata_turnout <- subset(geosubdata, select=c(turnout, geometry, bc_code))
+
+# Merge areas for combined neighbourhoods 
+geosubdata_turnout <- aggregate(geosubdata_turnout[,1:2], 
+                             by=list(geosubdata_turnout$bc_code), 
+                             do_union = TRUE, 
+                             FUN=mean) %>% #take average of net income
+  subset(select=-c(Group.1)) #TODO: this line needed?
+
+geosubdata_turnout %>%
+  #TODO: for all factors: fix labels and cats
+  mutate(turnout_factor = 
+           factor(
+             ifelse(turnout < 20, "0-20",
+                    ifelse(turnout < 40, "20-40",
+                           ifelse(turnout < 60, "40-60",
+                                  ifelse(turnout < 80, "60-80",
+                                         ifelse(turnout < 100, "80-100", ">100"))))),
+             levels = c(">100", "80-100", "60-80", "40-60", "20-40", "0-20"), #reverse order to list high numbers first in legend
+             ordered = TRUE)) %>%
+  ggplot() +
+  geom_sf(aes(fill = turnout_factor),
+          color = "white") +   #borders in white
+  theme_void() + 
+  scale_fill_brewer(palette = "Blues", #turnout in blue
+                    na.value = "grey",  #TODO:does not work yet
+                    direction = -1) + #darker colours for higher turnout
+  labs(#title = "Turnout in the 2018 municipal elections", #TODO: consider removing
+       fill = "Turnout in %")
+ggsave("map_2018_turnout.png", width = 2370, height = 1558, units = "px")
+
 
 ##### OLD ######## -------------------------------------------------------------------------------------------------------------------------------
 

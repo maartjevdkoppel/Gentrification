@@ -46,6 +46,11 @@ fulldata <- readRDS("gentrification_data_long_revised.rds")
 # Subset to 2018 only
 subdata <- fulldata[which(fulldata$year=='2018'), ]
   
+#Change in net income: turn into percentual change
+subdata <- subdata %>% mutate(netincome_delta2013 = (netincome_delta2013 / (netHHincome - netincome_delta2013))*100,
+                              netincome_delta2009 = (netincome_delta2009 / (netHHincome - netincome_delta2009))*100,
+                              netincome_delta2005 = (netincome_delta2005 / (netHHincome - netincome_delta2005))*100)
+
 # Redefine categories for migration background
 # Turkish, Moroccan, Surinamese & Antillean vs. other migration vs. no migration background
 subdata$imm_TMSA  <- subdata$imm_Tur + subdata$imm_Mar + subdata$imm_Sur + subdata$imm_Ant
@@ -177,7 +182,7 @@ sumtable(table_data,
                     "% lower educated", "% higher educated"),
          summ = c("mean(x)", "sd(x)", "min(x)", "max(x)"),
          title = "Descriptive statistics",
-         note = "Note: Data from O&S Amsterdam.",
+         note = "Data: O&S Amsterdam, own adaptation.",
          digits = 3,
          out = "browser"
          )
