@@ -591,6 +591,127 @@ ggsave("map_turnout_comparative.png", plot = turnout_comparative,
 
 #PVDA: COMPARATIVE 2006-2018 -------------------------------------------------------------
 
+#Select necessary variables: geometry + variable to be visualised + bc_code (needed for merge)
+geosubdata_2006_pvda <- subset(geosubdata_2006, select=c(PVDA, geometry, bc_code))
+geosubdata_2010_pvda <- subset(geosubdata_2010, select=c(PVDA, geometry, bc_code))
+geosubdata_2014_pvda <- subset(geosubdata_2014, select=c(PVDA, geometry, bc_code))
+
+# Merge areas for combined neighbourhoods 
+geosubdata_2006_pvda <- aggregate(geosubdata_2006_pvda[,1:2], 
+                                  by=list(geosubdata_2006_pvda$bc_code), 
+                                  do_union = TRUE, 
+                                  FUN=mean) %>% #take average 
+  subset(select=-c(Group.1)) #TODO: this line needed?
+
+geosubdata_2010_pvda <- aggregate(geosubdata_2010_pvda[,1:2], 
+                                  by=list(geosubdata_2010_pvda$bc_code), 
+                                  do_union = TRUE, 
+                                  FUN=mean) %>% #take average 
+  subset(select=-c(Group.1)) #TODO: this line needed?
+
+geosubdata_2014_pvda <- aggregate(geosubdata_2014_pvda[,1:2], 
+                                  by=list(geosubdata_2014_pvda$bc_code), 
+                                  do_union = TRUE, 
+                                  FUN=mean) %>% #take average 
+  subset(select=-c(Group.1)) #TODO: this line needed?
+
+#Make plots per year
+map_2006_pvda <- geosubdata_2006_pvda %>%
+  filter(!is.na(turnout)) %>%
+  mutate(turnout_factor = 
+           factor(
+             ifelse(turnout < 20, "0-20",
+                    ifelse(turnout < 40, "20-40",
+                           ifelse(turnout < 60, "40-60",
+                                  ifelse(turnout < 80, "60-80",
+                                         ifelse(turnout < 100, "80-100", ">100"))))),
+             levels = c(">100", "80-100", "60-80", "40-60", "20-40", "0-20"), #reverse order to list high numbers first in legend
+             ordered = TRUE)) %>%
+  ggplot() +
+  geom_sf(aes(fill = turnout_factor),
+          color = "white") +   #borders in white
+  theme_void() + 
+  scale_fill_brewer(palette = "Blues", #turnout in blue
+                    na.value = "grey",  #TODO:does not work yet
+                    direction = -1) + #darker colours for higher turnout
+  theme(legend.position = "none") + 
+  labs(title = "2006", #TODO: consider removing
+       fill = "Turnout in %")
+ggsave("map_2006_turnout.png", width = 2370, height = 1558, units = "px")
+
+map_2010_turnout <- geosubdata_2010_turnout %>%
+  mutate(turnout_factor = 
+           factor(
+             ifelse(turnout < 20, "0-20",
+                    ifelse(turnout < 40, "20-40",
+                           ifelse(turnout < 60, "40-60",
+                                  ifelse(turnout < 80, "60-80",
+                                         ifelse(turnout < 100, "80-100", ">100"))))),
+             levels = c(">100", "80-100", "60-80", "40-60", "20-40", "0-20"), #reverse order to list high numbers first in legend
+             ordered = TRUE)) %>%
+  ggplot() +
+  geom_sf(aes(fill = turnout_factor),
+          color = "white") +   #borders in white
+  theme_void() + 
+  scale_fill_brewer(palette = "Blues", #turnout in blue
+                    na.value = "grey",  #TODO:does not work yet
+                    direction = -1) + #darker colours for higher turnout
+  theme(legend.position = "none") + 
+  labs(title = "2010", #TODO: consider removing
+       fill = "Turnout in %")
+ggsave("map_2010_turnout.png", width = 2370, height = 1558, units = "px")
+
+map_2014_turnout <-geosubdata_2014_turnout %>%
+  mutate(turnout_factor = 
+           factor(
+             ifelse(turnout < 20, "0-20",
+                    ifelse(turnout < 40, "20-40",
+                           ifelse(turnout < 60, "40-60",
+                                  ifelse(turnout < 80, "60-80",
+                                         ifelse(turnout < 100, "80-100", ">100"))))),
+             levels = c(">100", "80-100", "60-80", "40-60", "20-40", "0-20"), #reverse order to list high numbers first in legend
+             ordered = TRUE)) %>%
+  ggplot() +
+  geom_sf(aes(fill = turnout_factor),
+          color = "white") +   #borders in white
+  theme_void() + 
+  scale_fill_brewer(palette = "Blues", #turnout in blue
+                    na.value = "grey",  #TODO:does not work yet
+                    direction = -1) + #darker colours for higher turnout
+  theme(legend.position = "bottom") +
+  labs(title = "2014", #TODO: consider removing
+       fill = "Turnout in %")
+ggsave("map_2014_turnout.png", width = 2370, height = 1558, units = "px")
+
+#TODO: make plots per year for export neat: add legend, remove title
+
+#Combined plot
+
+library(gridExtra) #TODO: move up if definitely using
+
+#Get legend from 2014 map (all categories) to use as common legend
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+legend <- get_legend(map_2014_turnout) #save legend as object
+map_2014_turnout <- map_2014_turnout + theme(legend.position="none") #remove legend from 2014 map
+
+#Change legend position
+blankPlot <- ggplot()+geom_blank(aes(1,1)) + 
+  cowplot::theme_nothing()
+
+turnout_comparative <- arrangeGrob(map_2006_turnout, map_2010_turnout, 
+                                   map_2014_turnout, map_2018_turnout,
+                                   legend, blankPlot,
+                                   ncol=2, nrow = 3, 
+                                   widths = c(2.7, 2.7), heights = c(2.5, 2.5, 0.2))
+ggsave("map_turnout_comparative.png", plot = turnout_comparative, 
+       width = 2844, height = 1870, units = "px")
+
 
 ##### OLD ######## -------------------------------------------------------------------------------------------------------------------------------
 
