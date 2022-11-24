@@ -615,73 +615,138 @@ geosubdata_2014_pvda <- aggregate(geosubdata_2014_pvda[,1:2],
                                   FUN=mean) %>% #take average 
   subset(select=-c(Group.1)) #TODO: this line needed?
 
+
+#Make map
+geosubdata_pvda %>%
+  #Turn continuous variable into factor for clearer plotting
+  mutate(pvda_factor = 
+           factor(
+             ifelse(PVDA < 7.5, "5-7.5",
+                    ifelse(PVDA < 10, "7.5-10",
+                           ifelse(PVDA < 12.5, "10-12.5", 
+                                  ifelse(PVDA < 15, "12.5-15", ">15")))),
+             levels = c(">15", "12.5-15", "10-12.5", "7.5-10", "5-7.5"), #reverse order to list high numbers first in legend
+             ordered = TRUE)) %>%
+  ggplot() + 
+  geom_sf(mapping = aes(fill = pvda_factor),
+          color = "white") +  #white neighbourhood borders
+  theme_void() + 
+  scale_fill_brewer(palette = "Blues", #income in blue
+                    na.value = "grey", #TODO:does not work yet
+                    direction = -1) +  #darker colours for higher pvda
+  labs(#title = "Vote share attained by PvdA in the 2018 municipal elections", #TODO: consider removing
+    fill = "Vote share in %")
+ggsave("map_2018_pvda.png", width = 2370, height = 1558, units = "px")
+
+
 #Make plots per year
 map_2006_pvda <- geosubdata_2006_pvda %>%
-  filter(!is.na(turnout)) %>%
-  mutate(turnout_factor = 
+  filter(!is.na(PVDA)) %>%
+  mutate(pvda_factor = 
            factor(
-             ifelse(turnout < 20, "0-20",
-                    ifelse(turnout < 40, "20-40",
-                           ifelse(turnout < 60, "40-60",
-                                  ifelse(turnout < 80, "60-80",
-                                         ifelse(turnout < 100, "80-100", ">100"))))),
-             levels = c(">100", "80-100", "60-80", "40-60", "20-40", "0-20"), #reverse order to list high numbers first in legend
+             ifelse(PVDA < 10, "5-10",
+                ifelse(PVDA < 15, "10-15",
+                  ifelse(PVDA < 20, "15-20",
+                    ifelse(PVDA < 25, "20-25",
+                      ifelse(PVDA < 30, "25-30",
+                         ifelse(PVDA < 40, "30-40",
+                            ifelse(PVDA < 50, "40-50",
+                              ifelse(PVDA < 60, "50-60", ">60")))))))),
+             levels = c(">60", "50-60", "40-50", "30-40", "25-30", "20-25", "15-20", "10-15", "5-10"), #reverse order to list high numbers first in legend
              ordered = TRUE)) %>%
   ggplot() +
-  geom_sf(aes(fill = turnout_factor),
+  geom_sf(aes(fill = pvda_factor),
           color = "white") +   #borders in white
   theme_void() + 
   scale_fill_brewer(palette = "Blues", #turnout in blue
-                    na.value = "grey",  #TODO:does not work yet
-                    direction = -1) + #darker colours for higher turnout
-  theme(legend.position = "none") + 
+                    #na.value = "grey",  #TODO:does not work yet
+                    direction = -1, 
+                    drop = FALSE) + #darker colours for higher PvdA support
+  theme(legend.position = "bottom") + 
   labs(title = "2006", #TODO: consider removing
-       fill = "Turnout in %")
-ggsave("map_2006_turnout.png", width = 2370, height = 1558, units = "px")
+       fill = "Vote share in %")
+ggsave("map_2006_pvda.png", width = 2370, height = 1558, units = "px")
 
-map_2010_turnout <- geosubdata_2010_turnout %>%
-  mutate(turnout_factor = 
+map_2010_pvda <- geosubdata_2010_pvda %>%
+  filter(!is.na(PVDA)) %>%
+  mutate(pvda_factor = 
            factor(
-             ifelse(turnout < 20, "0-20",
-                    ifelse(turnout < 40, "20-40",
-                           ifelse(turnout < 60, "40-60",
-                                  ifelse(turnout < 80, "60-80",
-                                         ifelse(turnout < 100, "80-100", ">100"))))),
-             levels = c(">100", "80-100", "60-80", "40-60", "20-40", "0-20"), #reverse order to list high numbers first in legend
+             ifelse(PVDA < 10, "5-10",
+                    ifelse(PVDA < 15, "10-15",
+                           ifelse(PVDA < 20, "15-20",
+                                  ifelse(PVDA < 25, "20-25",
+                                         ifelse(PVDA < 30, "25-30",
+                                                ifelse(PVDA < 40, "30-40",
+                                                       ifelse(PVDA < 50, "40-50",
+                                                              ifelse(PVDA < 60, "50-60", ">60")))))))),
+             levels = c(">60", "50-60", "40-50", "30-40", "25-30", "20-25", "15-20", "10-15", "5-10"), #reverse order to list high numbers first in legend
              ordered = TRUE)) %>%
   ggplot() +
-  geom_sf(aes(fill = turnout_factor),
+  geom_sf(aes(fill = pvda_factor),
           color = "white") +   #borders in white
   theme_void() + 
   scale_fill_brewer(palette = "Blues", #turnout in blue
-                    na.value = "grey",  #TODO:does not work yet
-                    direction = -1) + #darker colours for higher turnout
+                    #na.value = "grey",  #TODO:does not work yet
+                    direction = -1, 
+                    drop = FALSE) + #darker colours for higher PvdA support
   theme(legend.position = "none") + 
   labs(title = "2010", #TODO: consider removing
-       fill = "Turnout in %")
-ggsave("map_2010_turnout.png", width = 2370, height = 1558, units = "px")
+       fill = "Vote share in %")
+ggsave("map_2010_pvda.png", width = 2370, height = 1558, units = "px")
 
-map_2014_turnout <-geosubdata_2014_turnout %>%
-  mutate(turnout_factor = 
+map_2014_pvda <- geosubdata_2014_pvda %>%
+  filter(!is.na(PVDA)) %>%
+  mutate(pvda_factor = 
            factor(
-             ifelse(turnout < 20, "0-20",
-                    ifelse(turnout < 40, "20-40",
-                           ifelse(turnout < 60, "40-60",
-                                  ifelse(turnout < 80, "60-80",
-                                         ifelse(turnout < 100, "80-100", ">100"))))),
-             levels = c(">100", "80-100", "60-80", "40-60", "20-40", "0-20"), #reverse order to list high numbers first in legend
+             ifelse(PVDA < 10, "5-10",
+                    ifelse(PVDA < 15, "10-15",
+                           ifelse(PVDA < 20, "15-20",
+                                  ifelse(PVDA < 25, "20-25",
+                                         ifelse(PVDA < 30, "25-30",
+                                                ifelse(PVDA < 40, "30-40",
+                                                       ifelse(PVDA < 50, "40-50",
+                                                              ifelse(PVDA < 60, "50-60", ">60")))))))),
+             levels = c(">60", "50-60", "40-50", "30-40", "25-30", "20-25", "15-20", "10-15", "5-10"), #reverse order to list high numbers first in legend
              ordered = TRUE)) %>%
   ggplot() +
-  geom_sf(aes(fill = turnout_factor),
+  geom_sf(aes(fill = pvda_factor),
           color = "white") +   #borders in white
   theme_void() + 
   scale_fill_brewer(palette = "Blues", #turnout in blue
-                    na.value = "grey",  #TODO:does not work yet
-                    direction = -1) + #darker colours for higher turnout
-  theme(legend.position = "bottom") +
+                    #na.value = "grey",  #TODO:does not work yet
+                    direction = -1, 
+                    drop = FALSE) + #darker colours for higher PvdA support
+  theme(legend.position = "none") + 
   labs(title = "2014", #TODO: consider removing
-       fill = "Turnout in %")
-ggsave("map_2014_turnout.png", width = 2370, height = 1558, units = "px")
+       fill = "Vote share in %")
+ggsave("map_2014_pvda.png", width = 2370, height = 1558, units = "px")
+
+map_2018_pvda <- geosubdata_pvda %>%
+  filter(!is.na(PVDA)) %>%
+  mutate(pvda_factor = 
+           factor(
+             ifelse(PVDA < 10, "5-10",
+                    ifelse(PVDA < 15, "10-15",
+                           ifelse(PVDA < 20, "15-20",
+                                  ifelse(PVDA < 25, "20-25",
+                                         ifelse(PVDA < 30, "25-30",
+                                                ifelse(PVDA < 40, "30-40",
+                                                       ifelse(PVDA < 50, "40-50",
+                                                              ifelse(PVDA < 60, "50-60", ">60")))))))),
+             levels = c(">60", "50-60", "40-50", "30-40", "25-30", "20-25", "15-20", "10-15", "5-10"), #reverse order to list high numbers first in legend
+             ordered = TRUE)) %>%
+  ggplot() +
+  geom_sf(aes(fill = pvda_factor),
+          color = "white") +   #borders in white
+  theme_void() + 
+  scale_fill_brewer(palette = "Blues", #turnout in blue
+                    #na.value = "grey",  #TODO:does not work yet
+                    direction = -1, 
+                    drop = FALSE) + #darker colours for higher PvdA support
+  theme(legend.position = "none") + 
+  labs(title = "2018", #TODO: consider removing
+       fill = "Vote share in %")
+
 
 #TODO: make plots per year for export neat: add legend, remove title
 
@@ -689,27 +754,20 @@ ggsave("map_2014_turnout.png", width = 2370, height = 1558, units = "px")
 
 library(gridExtra) #TODO: move up if definitely using
 
-#Get legend from 2014 map (all categories) to use as common legend
-get_legend<-function(myggplot){
-  tmp <- ggplot_gtable(ggplot_build(myggplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
-}
-
-legend <- get_legend(map_2014_turnout) #save legend as object
-map_2014_turnout <- map_2014_turnout + theme(legend.position="none") #remove legend from 2014 map
+#Get legend from 2006 map (all categories) to use as common legend
+legend <- get_legend(map_2006_pvda) #save legend as object
+map_2006_pvda <- map_2006_pvda + theme(legend.position="none") #remove legend from 2014 map
 
 #Change legend position
 blankPlot <- ggplot()+geom_blank(aes(1,1)) + 
   cowplot::theme_nothing()
 
-turnout_comparative <- arrangeGrob(map_2006_turnout, map_2010_turnout, 
-                                   map_2014_turnout, map_2018_turnout,
+pvda_comparative <- arrangeGrob(map_2006_pvda, map_2010_pvda, 
+                                   map_2014_pvda, map_2018_pvda,
                                    legend, blankPlot,
                                    ncol=2, nrow = 3, 
-                                   widths = c(2.7, 2.7), heights = c(2.5, 2.5, 0.2))
-ggsave("map_turnout_comparative.png", plot = turnout_comparative, 
+                                   widths = c(2.7, 2.7), heights = c(2.5, 2.5, 0.45))
+ggsave("map_pvda_comparative.png", plot = pvda_comparative, 
        width = 2844, height = 1870, units = "px")
 
 
