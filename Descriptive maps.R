@@ -1,9 +1,10 @@
 # Perils of “revitalization”? 
 # Gentrification, political participation, and support for social democrats in Amsterdam 
+#TODO: update title+date
 
 # Maartje van de Koppel
 # Descriptive maps
-# Last update: 19/10/22
+# Last update: 25/11/22
 
 
 # Set-up ------------------------------------------------------------------------------------------------------------ 
@@ -13,34 +14,22 @@
 setwd("/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Link-Jong-Amsterdam/Data/Analysis")
 
 # Load required packages
-
-# TODO: select only libraries used
-# TODO: add explanations of use
-
-#library(maptools)     #map making TODO: not needed?
-#library(rgdal)        #reading shapefiles for map making TODO: not needed?
-#library(gpclib)       #dependency rgdal TODO: not needed?
 library(broom)        #tidying shapefiles to dataframe
-library(raster)     
-library(foreign) 
+library(raster)       #working with spatial data
 library(tidyverse)    #tidyverse collection
-library(ggplot2)
-library(readxl)
-library(plyr)         #TODO: needed for join function?
+library(ggplot2)      #for plots
+library(readxl)       #importing excel files
+library(plyr)         
 library(dplyr)
-library(stats)
 library(tidyr)       
-library(expss)
-library(mctest)
-library(texreg)       #exporting regression tables to word
-library(emmeans)
 library(sf)           #reading shapefiles 
 library(RColorBrewer) #colour scales for maps
+library(gridExtra)    #combining ggplots into one figure
 
 # Data ------------------------------------------------------------------------------------------------------------ 
 
-# Import 2022 data
-# Data can be obtained here: https://onderzoek.amsterdam.nl/dataset/verkiezingen-gemeenteraad-2022  
+#Import 2022 data
+#Data can be obtained here: https://onderzoek.amsterdam.nl/dataset/verkiezingen-gemeenteraad-2022  
 additional_2022 <- read_xlsx("2022_gemeenteraadsverkiezingen_wijk_stadsdeel_5cb9f5e19c.xlsx", skip = 1) 
 
 election_2022 <- additional_2022 %>%
@@ -50,12 +39,12 @@ election_2022 <- additional_2022 %>%
   dplyr::rename(bc_code = wijkcode,
          bc_naam = wijknaam)
 
-# Import shapefile for neighbourhoods (based on 2015 bc code)
+#Import shapefile for neighbourhoods (based on 2015 bc code)
 geodata <- st_read("bc2015def_region.shp") %>%
   dplyr::rename(bc_code = BC2015,
                 bc_naam = NAAM)
 
-# Import neighbourhood data
+#Import neighbourhood data
 #Read data
 fulldata <- readRDS("gentrification_data_long_revised.rds")
 
@@ -67,8 +56,8 @@ subdata_2014 <- fulldata[which(fulldata$year=='2014'), ]
 
 # MERGE UNITS: SPATIAL DATA  -----------------------------------
 
-# Rename all neighbourhoods to be merged
-# Specify renaming function
+#Rename all neighbourhoods to be merged
+#Specify renaming function
 rename.bc <- function(x, condition, code, name){
   x$bc_code <- ifelse(condition, code, x$bc_code) # change BC code
   x$bc_naam <- ifelse(condition, name, x$bc_naam) # change BC name
@@ -84,8 +73,6 @@ condition     <- geodata$bc_naam == "Diamantbuurt" | geodata$bc_naam == "Zuid Pi
 geodata <- rename.bc(geodata, condition, "K26", "Diamantbuurt/Zuid Pijp")
 
 # Museumkwartier + Duivelseiland 
-## LET OP: geodata$bc_code == "K47" toegevoegd in poging probleem op te lossen
-#TODO: what does this mean?
 condition     <- geodata$bc_naam == "Duivelseiland" | geodata$bc_naam == "Museumkwartier" | geodata$bc_naam == "Museumkwartier + Duivelseiland" | geodata$bc_code == "K50" | geodata$bc_code == "K47"
 geodata <- rename.bc(geodata, condition, "K47+K50", "Museumkwartier + Duivelseiland")
 
@@ -158,8 +145,6 @@ condition     <- election_2022$bc_naam == "Diamantbuurt" | election_2022$bc_naam
 election_2022 <- rename.bc(election_2022, condition, "K26", "Diamantbuurt/Zuid Pijp")
 
 # Museumkwartier + Duivelseiland 
-## LET OP: election_2022$bc_code == "K47" toegevoegd in poging probleem op te lossen
-#TODO: what does this mean?
 condition     <- election_2022$bc_naam == "Duivelseiland" | election_2022$bc_naam == "Museumkwartier" | election_2022$bc_naam == "Museumkwartier + Duivelseiland" | election_2022$bc_code == "K50" | election_2022$bc_code == "K47"
 election_2022 <- rename.bc(election_2022, condition, "K47+K50", "Museumkwartier + Duivelseiland")
 
@@ -222,30 +207,24 @@ election_2022 <- rename.bc(election_2022, condition, "T96+T92", "Holendrecht/Rei
 
 # COMBINE SPATIAL AND ELECTION DATA -----------------
 
-# Combine election_2022 with geodata
+#Combine election_2022 with geodata
 geo_2022 <- merge(geodata, election_2022, by="bc_code")  
 
 
 # TURNOUT 2022 MAP -------------------------------------------
 
-# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
 geo_2022_turnout  <- subset(geo_2022, select=c(turnout_2022, geometry, bc_code))
 
-# Merge areas for combined neighbourhoods 
+#Merge areas for combined neighbourhoods 
 geo_2022_turnout <- aggregate(geo_2022_turnout[,1:2], 
                               by=list(geo_2022_turnout$bc_code), 
                               do_union = TRUE, 
                               FUN=mean) %>% #take average of turnout
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1))
 
-# Make the map
-#TODO NEWMAP: remove
-#png("turnout_2022_map.png", width=600, height=600)
-#plot(geo_2022_turnout, main="Turnout in the 2022 municipal election") #TODO: change colour palette
-#dev.off()
-
+#Make the map
 geo_2022_turnout %>%
-  #TODO: for all factors: fix labels and cats
   mutate(turnout_factor = 
            factor(
              ifelse(turnout_2022 < 20, "0-20",
@@ -259,24 +238,22 @@ geo_2022_turnout %>%
   geom_sf(aes(fill = turnout_factor),
           color = "white") +   #borders in white
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #turnout in blue
-                    na.value = "grey",  #TODO:does not work yet
+  scale_fill_brewer(palette = "Blues",
                     direction = -1) + #darker colours for higher turnout
-  labs(title = "Turnout in the 2022 municipal elections", #TODO: consider removing
-       fill = "Turnout in %")
+  labs(fill = "Turnout in %")
 ggsave("map_2022_turnout.png", width = 2370, height = 1558, units = "px")
 
 # PVDA 2022 MAP -------------------------------------------
 
-# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
 geo_2022_pvda  <- subset(geo_2022, select=c(PVDA_2022, geometry, bc_code))
 
-# Merge areas for combined neighbourhoods 
+#Merge areas for combined neighbourhoods 
 geo_2022_pvda <- aggregate(geo_2022_pvda[,1:2], 
                            by=list(geo_2022_pvda$bc_code), 
                            do_union = TRUE, 
                            FUN=mean) %>% #take average of pvda
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1))
 
 #Make the map
 geo_2022_pvda %>%
@@ -289,47 +266,37 @@ geo_2022_pvda %>%
              ordered = TRUE)) %>%
   ggplot() +
   geom_sf(aes(fill = pvda_factor),
-          color = "white") +   #TODO:borders in white
+          color = "white") +
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #pvda in blue
-                    na.value = "grey",  #TODO:does not work yet
-                    direction = -1) + #darker colours for higher pvda
-  labs(title = "Vote share attained by PvdA in the 2022 municipal elections", #TODO: consider removing
-       fill = "Vote share in %")
+  scale_fill_brewer(palette = "Blues",
+                    direction = -1) + #darker colours for higher pvda vote shares
+  labs(fill = "Vote share in %")
 ggsave("map_2022_pvda.png", width = 2370, height = 1558, units = "px")
 
 
 # GENTRIFICATION: PUBLIC HOUSING -------------------------------------------
 
-# Combine geodata with neighbourhood data
+#Combine geodata with neighbourhood data
 geosubdata <- merge(geodata, subdata, by="bc_code")  
 
 
-# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
 geosubdata_pubhousing  <- subset(geosubdata, select=c(housing_pub_delta2013, geometry, bc_code))
 
-# Merge areas for combined neighbourhoods 
+#Merge areas for combined neighbourhoods 
 geosubdata_pubhousing <- aggregate(geosubdata_pubhousing[,1:2], 
                                    by=list(geosubdata_pubhousing$bc_code), 
                                    do_union = TRUE, 
                                    FUN=mean) %>% #take average of %public housing
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1))
 
 #Make map
 #Custom color palette, based on colorbrewer
-#TODO: remove unused palettes
-brewer.pal(7, "RdYlBu")
-palette1 <- c("#D73027", "#FC8D59", "#FEE090", "#FFFFBF", "#91BFDB", "#4575B4") #red to blue via yellow
-palette2<- c("#4575B4", "#91BFDB", "#FFFFBF", "#FEE090", "#FC8D59", "#D73027") #blue to red via yellow
-
-brewer.pal(7, "RdBu")
-palette3 <- c("#B2182B", "#EF8A62", "#FDDBC7", "#F7F7F7", "#67A9CF", "#2166AC") #red to blue 
 rev(brewer.pal(7, "RdBu"))
 palette4 <- c("#2166AC", "#67A9CF", "#F7F7F7", "#FDDBC7", "#EF8A62", "#B2182B") #blue to red
 
 geosubdata_pubhousing %>%
   #Turn continuous variable into factor for clearer plotting
-  #TODO: check coding and labelling of categories!
   mutate(pubhousing_factor = 
            factor(
              ifelse(housing_pub_delta2013 > 5, ">5",
@@ -342,13 +309,10 @@ geosubdata_pubhousing %>%
              ordered = TRUE)) %>%
   ggplot() + 
   geom_sf(aes(fill = pubhousing_factor),
-          color = "white") + #TODO: white neighbourhood borders
+          color = "white") + 
   theme_void() + 
   scale_fill_manual(values = palette4) + 
-  #na.value = "gray",  #TODO: does not work yet
-  #direction = -1) + #darker colours for higher turnout
-  labs(title = "Change in corporation-owned (public) housing (2013-2017)", #TODO: consider removing
-       fill = "Change in percentage points")
+  labs(fill = "Change in percentage points")
 ggsave("map_publichousing_2013_2017.png", width = 2370, height = 1558, units = "px")
 
 
@@ -359,20 +323,19 @@ geosubdata <- geosubdata %>% mutate(netincome_delta2013 = (netincome_delta2013 /
                                     netincome_delta2009 = (netincome_delta2009 / (netHHincome - netincome_delta2009))*100,
                                     netincome_delta2005 = (netincome_delta2005 / (netHHincome - netincome_delta2005))*100)
 
-# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
 geosubdata_netincome <- subset(geosubdata, select=c(netincome_delta2013, geometry, bc_code))
 
-# Merge areas for combined neighbourhoods 
+#Merge areas for combined neighbourhoods 
 geosubdata_netincome <- aggregate(geosubdata_netincome[,1:2], 
                                   by=list(geosubdata_netincome$bc_code), 
                                   do_union = TRUE, 
                                   FUN=mean) %>% #take average of net income
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1))
 
 #Make map
 geosubdata_netincome %>%
   #Turn continuous variable into factor for clearer plotting
-  #TODO: check coding and labelling of categories!
   mutate(netincome_factor = 
            factor(
              ifelse(netincome_delta2013 < 5, "0-5",
@@ -387,10 +350,8 @@ geosubdata_netincome %>%
   geom_sf(mapping = aes(fill = netincome_factor),
           color = "white") +  #white neighbourhood borders
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #income in blue
-                    na.value = "grey") +  #TODO:does not work yet
-  labs(title = "Change in average net income per household (2013-2017)", #TODO: consider removing
-       fill = "Percentage change")
+  scale_fill_brewer(palette = "Blues") + 
+  labs(fill = "Percentage change")
 ggsave("map_netincome_2013_2017.png", width = 2370, height = 1558, units = "px")
 
 # PVDA 2018 MAP -----------------------------------------------------------
@@ -403,7 +364,7 @@ geosubdata_pvda <- aggregate(geosubdata_pvda[,1:2],
                              by=list(geosubdata_pvda$bc_code), 
                              do_union = TRUE, 
                              FUN=mean) %>% #take average
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1))
 
 #Make map
 geosubdata_pvda %>%
@@ -420,25 +381,24 @@ geosubdata_pvda %>%
   geom_sf(mapping = aes(fill = pvda_factor),
           color = "white") +  #white neighbourhood borders
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #income in blue
-                    na.value = "grey", #TODO:does not work yet
+  scale_fill_brewer(palette = "Blues",
                     direction = -1) +  #darker colours for higher pvda
-  labs(#title = "Vote share attained by PvdA in the 2018 municipal elections", #TODO: consider removing
-       fill = "Vote share in %")
+  labs(fill = "Vote share in %")
 ggsave("map_2018_pvda.png", width = 2370, height = 1558, units = "px")
 
 # TURNOUT 2018 MAP ------------------------------------------------------------
 
-# Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
+#Select necessary variable: geometry + variable to be visualised + bc_code (needed for merge)
 geosubdata_turnout <- subset(geosubdata, select=c(turnout, geometry, bc_code))
 
-# Merge areas for combined neighbourhoods 
+#Merge areas for combined neighbourhoods 
 geosubdata_turnout <- aggregate(geosubdata_turnout[,1:2], 
                              by=list(geosubdata_turnout$bc_code), 
                              do_union = TRUE, 
                              FUN=mean) %>% #take average
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1))
 
+#Export 2018 map
 map_2018_turnout <- geosubdata_turnout %>%
   mutate(turnout_factor = 
            factor(
@@ -451,15 +411,17 @@ map_2018_turnout <- geosubdata_turnout %>%
              ordered = TRUE)) %>%
   ggplot() +
   geom_sf(aes(fill = turnout_factor),
-          color = "white") +   #borders in white
+          color = "white") + #borders in white
   theme_void() + 
   scale_fill_brewer(palette = "Blues", #turnout in blue
-                    na.value = "grey",  #TODO:does not work yet
                     direction = -1) + #darker colours for higher turnout 
-  theme(legend.position = "none") + #TODO: make neat for exporting this year only
-  labs(title = "2018", #TODO: make neat for exporting this year only
-       fill = "Turnout in %")
+  labs(fill = "Turnout in %")
 ggsave("map_2018_turnout.png", width = 2370, height = 1558, units = "px")
+
+#Save object without legend and incl. year for comparative map
+map_2018_turnout <- map_2018_turnout + 
+  theme(legend.position = "none") +
+  labs(title = "2018")
 
 #TURNOUT: COMPARATIVE 2006-2018 -------------------------------------------------------------
 
@@ -478,19 +440,19 @@ geosubdata_2006_turnout <- aggregate(geosubdata_2006_turnout[,1:2],
                                      by=list(geosubdata_2006_turnout$bc_code), 
                                      do_union = TRUE, 
                                      FUN=mean) %>% #take average 
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1)) 
 
 geosubdata_2010_turnout <- aggregate(geosubdata_2010_turnout[,1:2], 
                                      by=list(geosubdata_2010_turnout$bc_code), 
                                      do_union = TRUE, 
                                      FUN=mean) %>% #take average 
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1)) 
 
 geosubdata_2014_turnout <- aggregate(geosubdata_2014_turnout[,1:2], 
                                      by=list(geosubdata_2014_turnout$bc_code), 
                                      do_union = TRUE, 
                                      FUN=mean) %>% #take average 
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1)) 
 
 #Make plots per year
 map_2006_turnout <- geosubdata_2006_turnout %>%
@@ -508,13 +470,11 @@ map_2006_turnout <- geosubdata_2006_turnout %>%
   geom_sf(aes(fill = turnout_factor),
           color = "white") +   #borders in white
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #turnout in blue
-                    na.value = "grey",  #TODO:does not work yet
+  scale_fill_brewer(palette = "Blues", 
                     direction = -1) + #darker colours for higher turnout
   theme(legend.position = "none") + 
-  labs(title = "2006", #TODO: consider removing
+  labs(title = "2006", 
     fill = "Turnout in %")
-ggsave("map_2006_turnout.png", width = 2370, height = 1558, units = "px")
 
 map_2010_turnout <- geosubdata_2010_turnout %>%
   mutate(turnout_factor = 
@@ -530,13 +490,11 @@ map_2010_turnout <- geosubdata_2010_turnout %>%
   geom_sf(aes(fill = turnout_factor),
           color = "white") +   #borders in white
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #turnout in blue
-                    na.value = "grey",  #TODO:does not work yet
+  scale_fill_brewer(palette = "Blues", 
                     direction = -1) + #darker colours for higher turnout
   theme(legend.position = "none") + 
-  labs(title = "2010", #TODO: consider removing
+  labs(title = "2010", 
     fill = "Turnout in %")
-ggsave("map_2010_turnout.png", width = 2370, height = 1558, units = "px")
 
 map_2014_turnout <-geosubdata_2014_turnout %>%
   mutate(turnout_factor = 
@@ -552,21 +510,15 @@ map_2014_turnout <-geosubdata_2014_turnout %>%
   geom_sf(aes(fill = turnout_factor),
           color = "white") +   #borders in white
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #turnout in blue
-                    na.value = "grey",  #TODO:does not work yet
+  scale_fill_brewer(palette = "Blues", 
                     direction = -1) + #darker colours for higher turnout
   theme(legend.position = "bottom") +
-  labs(title = "2014", #TODO: consider removing
+  labs(title = "2014", 
     fill = "Turnout in %")
-ggsave("map_2014_turnout.png", width = 2370, height = 1558, units = "px")
-
-#TODO: make plots per year for export neat: add legend, remove title
 
 #Combined plot
-
-library(gridExtra) #TODO: move up if definitely using
-
 #Get legend from 2014 map (all categories) to use as common legend
+#Function from: https://stackoverflow.com/questions/12539348/ggplot-separate-legend-and-plot
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
   leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
@@ -601,43 +553,19 @@ geosubdata_2006_pvda <- aggregate(geosubdata_2006_pvda[,1:2],
                                   by=list(geosubdata_2006_pvda$bc_code), 
                                   do_union = TRUE, 
                                   FUN=mean) %>% #take average 
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1)) 
 
 geosubdata_2010_pvda <- aggregate(geosubdata_2010_pvda[,1:2], 
                                   by=list(geosubdata_2010_pvda$bc_code), 
                                   do_union = TRUE, 
                                   FUN=mean) %>% #take average 
-  subset(select=-c(Group.1)) #TODO: this line needed?
+  subset(select=-c(Group.1)) 
 
 geosubdata_2014_pvda <- aggregate(geosubdata_2014_pvda[,1:2], 
                                   by=list(geosubdata_2014_pvda$bc_code), 
                                   do_union = TRUE, 
                                   FUN=mean) %>% #take average 
-  subset(select=-c(Group.1)) #TODO: this line needed?
-
-
-#Make map
-geosubdata_pvda %>%
-  #Turn continuous variable into factor for clearer plotting
-  mutate(pvda_factor = 
-           factor(
-             ifelse(PVDA < 7.5, "5-7.5",
-                    ifelse(PVDA < 10, "7.5-10",
-                           ifelse(PVDA < 12.5, "10-12.5", 
-                                  ifelse(PVDA < 15, "12.5-15", ">15")))),
-             levels = c(">15", "12.5-15", "10-12.5", "7.5-10", "5-7.5"), #reverse order to list high numbers first in legend
-             ordered = TRUE)) %>%
-  ggplot() + 
-  geom_sf(mapping = aes(fill = pvda_factor),
-          color = "white") +  #white neighbourhood borders
-  theme_void() + 
-  scale_fill_brewer(palette = "Blues", #income in blue
-                    na.value = "grey", #TODO:does not work yet
-                    direction = -1) +  #darker colours for higher pvda
-  labs(#title = "Vote share attained by PvdA in the 2018 municipal elections", #TODO: consider removing
-    fill = "Vote share in %")
-ggsave("map_2018_pvda.png", width = 2370, height = 1558, units = "px")
-
+  subset(select=-c(Group.1)) 
 
 #Make plots per year
 map_2006_pvda <- geosubdata_2006_pvda %>%
@@ -658,14 +586,12 @@ map_2006_pvda <- geosubdata_2006_pvda %>%
   geom_sf(aes(fill = pvda_factor),
           color = "white") +   #borders in white
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #turnout in blue
-                    #na.value = "grey",  #TODO:does not work yet
-                    direction = -1, 
-                    drop = FALSE) + #darker colours for higher PvdA support
+  scale_fill_brewer(palette = "Blues", 
+                    direction = -1, #darker colours for higher PvdA vote shares
+                    drop = FALSE) + #legend becomes common legend: show all categories
   theme(legend.position = "bottom") + 
-  labs(title = "2006", #TODO: consider removing
+  labs(title = "2006", 
        fill = "Vote share in %")
-ggsave("map_2006_pvda.png", width = 2370, height = 1558, units = "px")
 
 map_2010_pvda <- geosubdata_2010_pvda %>%
   filter(!is.na(PVDA)) %>%
@@ -685,14 +611,12 @@ map_2010_pvda <- geosubdata_2010_pvda %>%
   geom_sf(aes(fill = pvda_factor),
           color = "white") +   #borders in white
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #turnout in blue
-                    #na.value = "grey",  #TODO:does not work yet
+  scale_fill_brewer(palette = "Blues",
                     direction = -1, 
-                    drop = FALSE) + #darker colours for higher PvdA support
+                    drop = FALSE) + #darker colours for higher PvdA vote shares
   theme(legend.position = "none") + 
-  labs(title = "2010", #TODO: consider removing
+  labs(title = "2010",
        fill = "Vote share in %")
-ggsave("map_2010_pvda.png", width = 2370, height = 1558, units = "px")
 
 map_2014_pvda <- geosubdata_2014_pvda %>%
   filter(!is.na(PVDA)) %>%
@@ -712,14 +636,12 @@ map_2014_pvda <- geosubdata_2014_pvda %>%
   geom_sf(aes(fill = pvda_factor),
           color = "white") +   #borders in white
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #turnout in blue
-                    #na.value = "grey",  #TODO:does not work yet
+  scale_fill_brewer(palette = "Blues",
                     direction = -1, 
-                    drop = FALSE) + #darker colours for higher PvdA support
+                    drop = FALSE) + #darker colours for higher PvdA vote shares
   theme(legend.position = "none") + 
-  labs(title = "2014", #TODO: consider removing
+  labs(title = "2014",
        fill = "Vote share in %")
-ggsave("map_2014_pvda.png", width = 2370, height = 1558, units = "px")
 
 map_2018_pvda <- geosubdata_pvda %>%
   filter(!is.na(PVDA)) %>%
@@ -739,21 +661,15 @@ map_2018_pvda <- geosubdata_pvda %>%
   geom_sf(aes(fill = pvda_factor),
           color = "white") +   #borders in white
   theme_void() + 
-  scale_fill_brewer(palette = "Blues", #turnout in blue
-                    #na.value = "grey",  #TODO:does not work yet
+  scale_fill_brewer(palette = "Blues",
                     direction = -1, 
-                    drop = FALSE) + #darker colours for higher PvdA support
+                    drop = FALSE) + #darker colours for higher PvdA vote shares
   theme(legend.position = "none") + 
-  labs(title = "2018", #TODO: consider removing
+  labs(title = "2018",
        fill = "Vote share in %")
 
 
-#TODO: make plots per year for export neat: add legend, remove title
-
 #Combined plot
-
-library(gridExtra) #TODO: move up if definitely using
-
 #Get legend from 2006 map (all categories) to use as common legend
 legend <- get_legend(map_2006_pvda) #save legend as object
 map_2006_pvda <- map_2006_pvda + theme(legend.position="none") #remove legend from 2014 map
