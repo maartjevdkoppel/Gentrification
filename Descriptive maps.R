@@ -16,11 +16,10 @@ setwd("/Users/Maartje/Desktop/LJA/Paper politicologenetmaal/Link-Jong-Amsterdam/
 # Load required packages
 library(broom)        #tidying shapefiles to dataframe
 library(raster)       #working with spatial data
+library(plyr)   
 library(tidyverse)    #tidyverse collection
 library(ggplot2)      #for plots
 library(readxl)       #importing excel files
-library(plyr)         
-library(dplyr)
 library(tidyr)       
 library(sf)           #reading shapefiles 
 library(RColorBrewer) #colour scales for maps
@@ -685,85 +684,3 @@ pvda_comparative <- arrangeGrob(map_2006_pvda, map_2010_pvda,
                                    widths = c(2.7, 2.7), heights = c(2.5, 2.5, 0.45))
 ggsave("map_pvda_comparative.png", plot = pvda_comparative, 
        width = 2844, height = 1870, units = "px")
-
-
-##### OLD ######## -------------------------------------------------------------------------------------------------------------------------------
-
-#TODO: remove
-
-#library(rgdal)
-#library(ggplot2)
-#library(broom)
-#library(tidyverse)
-#library(gpclib)
-#library(maptools)
-#library(readxl)
-#library(RColorBrewer)
-#
-#shp <- readOGR("bc2015def_region.shp", stringsAsFactors = F)
-#summary(shp@data)
-#
-##Plotting empty neighbourhood outlines only
-#map <- ggplot() + geom_polygon(data = shp, aes(x = long, y = lat, group = group), colour = "black", fill = NA)
-#map + theme_void()
-#
-##Add information to plot
-## Data can be obtained here: https://onderzoek.amsterdam.nl/dataset/verkiezingen-gemeenteraad-2022  
-#additional_2022 <- read_xlsx("2022_gemeenteraadsverkiezingen_wijk_stadsdeel_5cb9f5e19c.xlsx", skip = 1) 
-#
-#election_2022 <- additional_2022 %>%
-#  select(wijkcode, wijknaam, kiesgerechtigden, `geldige stembiljetten`, `Partij van de Arbeid (P.v.d.A.)`) %>%
-#  mutate(turnout_2022 = (`geldige stembiljetten` / kiesgerechtigden)*100,
-#         PVDA_2022 = (`Partij van de Arbeid (P.v.d.A.)` / `geldige stembiljetten`)*100) %>%
-#  dplyr::rename(bc_code = wijkcode,
-#         bc_naam = wijknaam)
-#
-## Transform the shapefile into a dataframe
-#shp_df <- broom::tidy(shp, region = "BC2015")
-#
-## Merge with election data
-#geodata <- left_join(shp_df, election_2022, by = c("id" = "bc_code"))
-#
-##Make the mapf
-##TODO: consider removing fill for NA
-#
-#  #Continuous scale
-#  ggplot() + 
-#    geom_polygon(data = geodata,
-#                 aes(x = long, y = lat, group = group, fill = turnout_2022), 
-#                 colour = "white") + #white neighbourhood borders\
-#    theme_void() +
-#    scale_fill_gradient(low = "#084594", #TODO: change colours
-#                        high = "#FB6A4A",
-#                        limits = c(0,200),
-#                        breaks = c(20, 40, 60, 80, 100),
-#                        guide = guide_colourbar(label = TRUE, #add percentages
-#                                                barheight = 10)) + #make bar longer
-#    labs(title = "Turnout at the 2022 municipal elections",
-#         fill = "Turnout in %")
-#
-#  #Discrete scale
-#  geodata %>%
-#    mutate(turnout_factor = 
-#             factor(
-#               ifelse(turnout_2022 < 21, "0-20",
-#                ifelse(turnout_2022 > 21 & turnout_2022 < 40, "21-40",
-#                 ifelse(turnout_2022 > 41 & turnout_2022 < 60, "41-60",
-#                  ifelse(turnout_2022 > 61 & turnout_2022 < 80, "61-80",
-#                    ifelse(turnout_2022 > 81 & turnout_2022 < 100, "81-100", ">100"))))),
-#               #levels = c("0-20", "21-40", "41-60", "61-80", "81-100", ">100"),
-#               levels = c(">100", "81-100", "61-80", "41-60", "21-40", "0-20"), #reverse order to list high numbers first in legend
-#               ordered = TRUE)) %>%
-#    ggplot() + 
-#    geom_polygon(aes(x = long, y = lat, group = group, 
-#                     fill = turnout_factor), 
-#                 colour = "white") + #white neighbourhood borders
-#    theme_void() + 
-#    scale_fill_brewer(palette = "Blues", #turnout in blue
-#                      na.value = "gray",  #missing neighbourhoods in grey
-#                      direction = -1) + #darker colours for higher turnout
-#    labs(title = "Turnout at the 2022 municipal elections", #TODO: consider removing
-#         fill = "Turnout in %")
-
-
-
